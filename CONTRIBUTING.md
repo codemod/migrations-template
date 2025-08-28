@@ -28,7 +28,7 @@ npx codemod@latest init recipes/my-codemod
 ```
 
 During prompts, select appropriate options for your use case. Placeholders to adapt:
-- Name: `<NAMESPACE>/<MAJOR_VERSION>/<codemod-name>`
+- Name: `@<NAMESPACE>/<MAJOR_VERSION>/<codemod-name>`
 
 ## Commit messages
 
