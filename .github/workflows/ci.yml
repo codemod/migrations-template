@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Lint
+        run: npm run lint --if-present
+      - name: Typecheck
+        run: npm run typecheck --if-present
+      - name: Validate codemod workflows
+        run: npm run validate
+      - name: Test recipes
+        run: npm run test
+
