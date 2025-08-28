@@ -26,12 +26,15 @@ function extractWorkflowConfig(workflowYaml) {
 	const hasAstGrep = workflowYaml.includes('ast-grep:');
 	// Check if this is a JSSG workflow
 	const hasJsFile = workflowYaml.includes('js_file:');
+	// Check if this is a shell workflow
+	const hasShellScripts = workflowYaml.includes('run:') && workflowYaml.includes('.sh');
 	
 	return {
 		hasAstGrep,
 		hasJsFile,
+		hasShellScripts,
 		jsFile: hasJsFile ? workflowYaml.match(/js_file:\s*["']?([^"'\n]+)["']?/)?.[1]?.trim() : null,
-		language: workflowYaml.match(/language:\s*["']?([^"'\n]+)["']?/)?.[1]?.trim() || "typescript",
+		language: hasJsFile ? workflowYaml.match(/language:\s*["']?([^"'\n]+)["']?/)?.[1]?.trim() || "typescript" : null,
 	};
 }
 
@@ -51,7 +54,7 @@ function run() {
 		} catch {}
 
 		const wf = readFileSync(workflowPath, "utf8");
-		const { hasAstGrep, hasJsFile, jsFile, language } = extractWorkflowConfig(wf);
+		const { hasAstGrep, hasJsFile, hasShellScripts, jsFile, language } = extractWorkflowConfig(wf);
 		
 		if (hasAstGrep) {
 			// For AST-grep workflows, run the workflow to test transformations
@@ -150,6 +153,20 @@ function run() {
 				{ stdio: "inherit" },
 			);
 			if (res.status !== 0) process.exit(res.status ?? 1);
+		} else if (hasShellScripts) {
+			// For shell workflows, run the workflow to test execution
+			process.stdout.write(`Running shell workflow tests in ${recipeDir}\n\n`);
+			const res = spawnSync(
+				"npx",
+				["-y", "codemod@latest", "workflow", "run", "-w", workflowPath],
+				{ cwd: recipeDir, stdio: "inherit" },
+			);
+			if (res.status !== 0) {
+				process.stdout.write(`❌ Shell workflow execution failed in ${recipeDir}\n\n`);
+				process.exit(res.status ?? 1);
+			} else {
+				process.stdout.write(`✅ Shell workflow executed successfully in ${recipeDir}\n\n`);
+			}
 		} else {
 			process.stdout.write(`⚠️  No supported workflow type found in ${recipeDir}\n\n`);
 		}
