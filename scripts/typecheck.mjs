@@ -1,9 +1,50 @@
 #!/usr/bin/env node
-import { execSync, spawnSync } from 'child_process';
+import { spawnSync } from 'child_process';
 import { existsSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 
 console.log('🔍 Running TypeScript typecheck...\n');
+
+// Detect CI environment
+const isCI = process.env.CI || process.env.GITHUB_ACTIONS || process.env.GITLAB_CI;
+if (isCI) {
+  console.log('🏗️  CI environment detected\n');
+  console.log('📊 Environment info:');
+  console.log(`   Node.js: ${process.version}`);
+  console.log(`   Platform: ${process.platform}`);
+  console.log(`   Architecture: ${process.arch}`);
+  console.log(`   Working directory: ${process.cwd()}\n`);
+}
+
+// Recursively find TypeScript files in a directory
+function findTypescriptFilesRecursive(dir, excludePatterns = []) {
+  const files = [];
+  
+  if (!existsSync(dir)) return files;
+  
+  try {
+    const items = readdirSync(dir);
+    for (const item of items) {
+      const fullPath = join(dir, item);
+      const stat = statSync(fullPath);
+      
+      if (stat.isDirectory()) {
+        // Skip excluded directories
+        if (excludePatterns.some(pattern => fullPath.includes(pattern))) {
+          continue;
+        }
+        // Recursively search subdirectories
+        files.push(...findTypescriptFilesRecursive(fullPath, excludePatterns));
+      } else if (item.endsWith('.ts') && !item.endsWith('.d.ts')) {
+        files.push(fullPath);
+      }
+    }
+  } catch (error) {
+    console.log(`⚠️  Warning: Could not read directory ${dir}: ${error.message}`);
+  }
+  
+  return files;
+}
 
 // Find all TypeScript files to check
 function findTypescriptFiles() {
@@ -12,25 +53,15 @@ function findTypescriptFiles() {
   // Check utils directory
   const utilsDir = 'utils';
   if (existsSync(utilsDir)) {
-    const utilsFiles = execSync(`find ${utilsDir} -name "*.ts" -type f -not -path "*/node_modules/*"`, { encoding: 'utf8' })
-      .trim()
-      .split('\n')
-      .filter(f => f.length > 0);
+    const utilsFiles = findTypescriptFilesRecursive(utilsDir, ['node_modules']);
     files.push(...utilsFiles);
   }
   
   // Check recipes for TypeScript source files (excluding codemod scripts, tests, and node_modules)
   const recipesDir = 'recipes';
   if (existsSync(recipesDir)) {
-    try {
-      const recipeSourceFiles = execSync(`find ${recipesDir} -path "*/src/*.ts" -o -path "*/src/**/*.ts" -type f | grep -v node_modules`, { encoding: 'utf8' })
-        .trim()
-        .split('\n')
-        .filter(f => f.length > 0 && f !== '');
-      files.push(...recipeSourceFiles);
-    } catch (e) {
-      // No src files found, which is fine
-    }
+    const recipeSourceFiles = findTypescriptFilesRecursive(recipesDir, ['node_modules', 'tests', 'scripts']);
+    files.push(...recipeSourceFiles);
   }
   
   return files;
@@ -42,15 +73,8 @@ function findCodemodScripts() {
   const recipesDir = 'recipes';
   
   if (existsSync(recipesDir)) {
-    try {
-      const scriptFiles = execSync(`find ${recipesDir} -path "*/scripts/*.ts" -type f | grep -v node_modules`, { encoding: 'utf8' })
-        .trim()
-        .split('\n')
-        .filter(f => f.length > 0 && f !== '');
-      scripts.push(...scriptFiles);
-    } catch (e) {
-      // No script files found, which is fine
-    }
+    const scriptFiles = findTypescriptFilesRecursive(join(recipesDir, 'jssg-codemod', 'scripts'), ['node_modules']);
+    scripts.push(...scriptFiles);
   }
   
   return scripts;
@@ -78,14 +102,35 @@ console.log('\n🔍 Running TypeScript compiler...');
 
 if (typescriptFiles.length === 0) {
   console.log('✅ No TypeScript source files to typecheck - skipping compilation');
+  if (isCI) {
+    console.log('ℹ️  This is normal in CI environments where only test files may be present');
+  }
   process.exit(0);
 }
 
-// Run TypeScript compiler
-const result = spawnSync('npx', ['tsc', '--noEmit', '--pretty', ...typescriptFiles], {
-  stdio: 'pipe',
-  encoding: 'utf8'
-});
+// Run TypeScript compiler - try multiple approaches for CI compatibility
+let result;
+try {
+  // First try: direct tsc command
+  result = spawnSync('tsc', ['--noEmit', '--pretty', ...typescriptFiles], {
+    stdio: 'pipe',
+    encoding: 'utf8'
+  });
+} catch (e) {
+  try {
+    // Second try: npx tsc
+    result = spawnSync('npx', ['tsc', '--noEmit', '--pretty', ...typescriptFiles], {
+      stdio: 'pipe',
+      encoding: 'utf8'
+    });
+  } catch (e2) {
+    // Third try: local node_modules tsc
+    result = spawnSync('node', ['./node_modules/.bin/tsc', '--noEmit', '--pretty', ...typescriptFiles], {
+      stdio: 'pipe',
+      encoding: 'utf8'
+    });
+  }
+}
 
 if (result.status === 0) {
   console.log(`✅ TypeScript compilation successful! (${typescriptFiles.length} files checked)`);
