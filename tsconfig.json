@@ -1,7 +1,18 @@
 {
 	"include": [
-		"recipes/*/src/**/*.ts",
-		"recipes/*/src/**/*.tsx"
+		"utils/**/*.ts"
+	],
+	"exclude": [
+		"**/tests/**/*",
+		"**/rules/**/*.yml",
+		"**/scripts/**/*.ts",
+		"**/node_modules/**/*",
+		"**/*.test.ts",
+		"**/*.test.js",
+		"**/*.spec.ts",
+		"**/*.spec.js",
+		"**/dist/**/*",
+		"**/build/**/*"
 	],
 	"compilerOptions": {
 		"target": "ES2020",
@@ -13,7 +24,7 @@
 		"resolveJsonModule": true,
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,
-		"types": ["@codemod.com/jssg-types"]
+		"types": []
 	}
 }
 

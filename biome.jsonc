@@ -1,12 +1,8 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.2.2/schema.json",
 	"files": {
-		"includes": [
-			"."
-		],
-		"experimentalScannerIgnores": [
-			"recipes/**/tests/**/fixtures/**"
-		]
+		"includes": ["."],
+		"experimentalScannerIgnores": ["recipes/**/tests/**/fixtures/**"]
 	},
 	"formatter": {
 		"enabled": true,
@@ -21,4 +17,3 @@
 		}
 	}
 }
-

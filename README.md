@@ -1,8 +1,6 @@
 <div align="center">
-  <img width="128" height="128" src=".github/assets/logo.png" alt="Migrations Repo" />
+  <img src=".github/assets/migrations-template.png" alt="Migrations Template" />
 </div>
-
-<h1 align="center"><ECOSYSTEM_NAME> codemods</h1>
 
 > Initial setup guide (remove once the repo is customized)
 
@@ -39,7 +37,16 @@ This repository contains codemods (automated migrations) for <ECOSYSTEM_NAME>. T
 npx codemod@latest <NAMESPACE>/<MAJOR_VERSION>/<codemod-name>
 
 # Run locally from a recipe directory
-codemod run -w workflow.yaml
+npx codemod@latest workflow run -w workflow.yaml
+
+# Test a specific recipe
+npx codemod@latest workflow run -w recipes/my-codemod/workflow.yaml
+
+# Or use the convenience script
+node scripts/test-recipe.mjs my-codemod
+
+# Run all tests
+npm run test
 ```
 
 See the Codemod CLI docs for full command reference: https://docs.codemod.com/cli/workflows
