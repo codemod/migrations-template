@@ -1,5 +1,0 @@
-name: test-codemod
-version: 1.0.0
-description: Test codemod for PR workflow validation
-author: test-user
-license: MIT
