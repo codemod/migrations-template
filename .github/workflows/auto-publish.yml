@@ -27,7 +27,23 @@ jobs:
     - name: Install dependencies
       run: npm install
     
+    - name: Check if auto-publishing is configured
+      id: check-config
+      run: |
+        if [ -z "${{ secrets.CODEMOD_API_KEY }}" ]; then
+          echo "configured=false" >> $GITHUB_OUTPUT
+          echo "⚠️  Auto-publishing is disabled: No CODEMOD_API_KEY secret configured"
+          echo "   To enable auto-publishing, set up your API key:"
+          echo "   1. Get API key from https://app.codemod.com/api-keys"
+          echo "   2. Add CODEMOD_API_KEY as a GitHub secret"
+          echo "   3. Optionally set CODEMOD_REGISTRY_SCOPE and CODEMOD_REGISTRY_URL as variables"
+        else
+          echo "configured=true" >> $GITHUB_OUTPUT
+          echo "✅ Auto-publishing is configured and enabled"
+        fi
+    
     - name: Auto-publish codemods
+      if: steps.check-config.outputs.configured == 'true'
       run: node scripts/auto-publish.mjs
       env:
         CODEMOD_API_KEY: ${{ secrets.CODEMOD_API_KEY }}
@@ -35,7 +51,7 @@ jobs:
         CODEMOD_REGISTRY_URL: ${{ vars.CODEMOD_REGISTRY_URL || 'https://registry.codemod.com' }}
     
     - name: Commit version updates
-      if: success()
+      if: steps.check-config.outputs.configured == 'true' && success()
       run: |
         if [ -n "$(git status --porcelain)" ]; then
           git config --local user.email "action@github.com"
