@@ -194,10 +194,31 @@ jobs:
             core.setOutput('approved', 'false');
           }
     
-    - name: Checkout code
+    - name: Get PR branch
+      if: steps.check-maintainer.outputs.approved == 'true'
+      id: pr-branch
+      run: |
+        # Get the PR number from the issue number (for issue_comment events on PRs)
+        PR_NUMBER="${{ github.event.issue.number }}"
+        echo "PR number: $PR_NUMBER"
+        
+        # Get PR details to find the head ref
+        PR_DATA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          "https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER")
+        
+        HEAD_REF=$(echo "$PR_DATA" | jq -r '.head.ref')
+        HEAD_SHA=$(echo "$PR_DATA" | jq -r '.head.sha')
+        
+        echo "head_ref=$HEAD_REF" >> $GITHUB_OUTPUT
+        echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
+        echo "PR branch: $HEAD_REF"
+        echo "PR SHA: $HEAD_SHA"
+    
+    - name: Checkout PR code
       if: steps.check-maintainer.outputs.approved == 'true'
       uses: actions/checkout@v4
       with:
+        ref: ${{ steps.pr-branch.outputs.head_sha }}
         fetch-depth: 0
     
     - name: Setup pnpm
