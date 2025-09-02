@@ -9,7 +9,7 @@
     "format": "npx -y @biomejs/biome format --write .",
     "validate": "node ./utils/validate-all.mjs",
     "test": "./scripts/test-all.sh",
-    "typecheck": "./scripts/typecheck.sh",
+    "typecheck": "tsc --noEmit",
     "prepare": "husky"
   },
   "devDependencies": {
