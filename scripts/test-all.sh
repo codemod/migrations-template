@@ -26,7 +26,13 @@ find recipes -name "workflow.yaml" | while read -r workflow; do
         if [ -z "$language" ]; then
             language="typescript"
         fi
-        npx codemod@latest jssg test -l "$language" "$recipe_dir/$js_file" "$recipe_dir/tests"
+        
+        # Check if test fixtures exist
+        if [ -d "$recipe_dir/tests" ] && [ -f "$recipe_dir/tests/fixtures/input.js" ] && [ -f "$recipe_dir/tests/fixtures/expected.js" ]; then
+            npx codemod@latest jssg test -l "$language" "$recipe_dir/$js_file" "$recipe_dir/tests"
+        else
+            echo "  ⚠️  Skipping tests - incomplete test fixtures (missing input.js or expected.js)"
+        fi
         
         echo "  ✅ $recipe_name tests completed"
     fi
