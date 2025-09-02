@@ -1,0 +1,11 @@
+id: replace-console-log
+language: javascript
+rule:
+  pattern: console.log($ARG)
+fix: logger.log($ARG)
+---
+id: replace-console-debug
+language: javascript
+rule:
+  pattern: console.debug($ARG)
+fix: logger.log($ARG)
