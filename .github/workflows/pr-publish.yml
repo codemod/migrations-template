@@ -54,7 +54,8 @@ jobs:
             VERSION=$(grep '^version:' "$codemod_dir/codemod.yaml" | sed 's/version: *//' | tr -d ' ')
             
             if [ -n "$NAME" ] && [ -n "$VERSION" ]; then
-              COMMAND="git tag -a v${VERSION}@${NAME} -m \"Release version v${VERSION} for ${NAME}\""
+              # Use codemod publish command instead of git tag
+              COMMAND="npx codemod@latest publish $codemod_dir"
               PUBLISH_COMMANDS="${PUBLISH_COMMANDS}${COMMAND}\n"
             fi
           fi
@@ -114,7 +115,7 @@ jobs:
           Show a thumbs up 👍 to this comment and I'll run the below commands to auto-publish the codemod(s) to the registry:
           
           \`\`\`bash
-          ${publishCommands}git push origin --tags
+          ${publishCommands}
           \`\`\`
           
           **Note:** Only reactions from repository maintainers will trigger the publishing workflow.
@@ -196,8 +197,60 @@ jobs:
       if: steps.check-reaction.outputs.approved == 'true'
       run: npm install
     
+    - name: Check API key configuration
+      if: steps.check-reaction.outputs.approved == 'true'
+      run: |
+        if [ -z "${{ secrets.CODEMOD_API_KEY }}" ]; then
+          echo "❌ CODEMOD_API_KEY secret is not configured"
+          echo "Please set up your API key in GitHub secrets"
+          exit 1
+        fi
+        echo "✅ API key is configured"
+    
+    - name: Auto-bump versions if needed
+      if: steps.check-reaction.outputs.approved == 'true'
+      run: |
+        COMMENT_BODY="${{ github.event.comment.body }}"
+        
+        # Extract codemod directories from the comment
+        CODEMODS=$(echo "$COMMENT_BODY" | grep -o '`recipes/[^`]*`' | sed 's/`//g')
+        
+        for codemod_dir in $CODEMODS; do
+          if [ -f "$codemod_dir/codemod.yaml" ]; then
+            echo "Checking $codemod_dir for version conflicts..."
+            
+            # Try to publish first to see if version exists
+            set +e
+            npx codemod@latest publish "$codemod_dir" --dry-run 2>&1 | grep -q "version.*already exists"
+            VERSION_EXISTS=$?
+            set -e
+            
+            if [ $VERSION_EXISTS -eq 0 ]; then
+              echo "Version conflict detected in $codemod_dir, auto-bumping..."
+              
+              # Extract current version
+              CURRENT_VERSION=$(grep '^version:' "$codemod_dir/codemod.yaml" | sed 's/version: *//' | tr -d ' ')
+              
+              # Bump patch version
+              NEW_VERSION=$(echo "$CURRENT_VERSION" | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
+              
+              # Update codemod.yaml
+              sed -i.bak "s/^version: .*/version: $NEW_VERSION/" "$codemod_dir/codemod.yaml"
+              
+              echo "✅ Bumped version from $CURRENT_VERSION to $NEW_VERSION in $codemod_dir"
+            else
+              echo "✅ No version conflict in $codemod_dir"
+            fi
+          fi
+        done
+      env:
+        CODEMOD_API_KEY: ${{ secrets.CODEMOD_API_KEY }}
+        CODEMOD_REGISTRY_SCOPE: ${{ vars.CODEMOD_REGISTRY_SCOPE || 'codemod' }}
+        CODEMOD_REGISTRY_URL: ${{ vars.CODEMOD_REGISTRY_URL || 'https://registry.codemod.com' }}
+    
     - name: Extract and execute publish commands
       if: steps.check-reaction.outputs.approved == 'true'
+      id: publish
       run: |
         COMMENT_BODY="${{ github.event.comment.body }}"
         
@@ -210,26 +263,68 @@ jobs:
         echo "Executing commands:"
         echo "$COMMANDS"
         
-        # Execute the commands
+        # Execute commands with error handling
+        set +e  # Don't exit on error
         echo "$COMMANDS" | bash
+        PUBLISH_EXIT_CODE=$?
+        set -e  # Re-enable exit on error
         
-        echo "✅ Publishing commands executed successfully!"
+        if [ $PUBLISH_EXIT_CODE -eq 0 ]; then
+          echo "✅ Publishing commands executed successfully!"
+          echo "success=true" >> $GITHUB_OUTPUT
+        else
+          echo "❌ Publishing failed with exit code: $PUBLISH_EXIT_CODE"
+          echo "success=false" >> $GITHUB_OUTPUT
+          echo "exit_code=$PUBLISH_EXIT_CODE" >> $GITHUB_OUTPUT
+        fi
+      env:
+        CODEMOD_API_KEY: ${{ secrets.CODEMOD_API_KEY }}
+        CODEMOD_REGISTRY_SCOPE: ${{ vars.CODEMOD_REGISTRY_SCOPE || 'codemod' }}
+        CODEMOD_REGISTRY_URL: ${{ vars.CODEMOD_REGISTRY_URL || 'https://registry.codemod.com' }}
     
-    - name: Update comment with success
+    - name: Update comment with result
       if: steps.check-reaction.outputs.approved == 'true'
       uses: actions/github-script@v7
       with:
         script: |
           const approver = '${{ steps.check-reaction.outputs.approver }}';
-          const commentBody = `## ✅ Published Successfully!
+          const success = '${{ steps.publish.outputs.success }}' === 'true';
+          const exitCode = '${{ steps.publish.outputs.exit_code }}';
           
-          **Approved by:** @${approver}
-          **Published at:** ${new Date().toISOString()}
+          let commentBody;
           
-          The codemods have been successfully published to the registry.
-          
-          ---
-          *This comment was automatically updated by the PR-based auto-publish workflow.*`;
+          if (success) {
+            commentBody = `## ✅ Published Successfully!
+            
+            **Approved by:** @${approver}
+            **Published at:** ${new Date().toISOString()}
+            
+            The codemods have been successfully published to the registry.
+            
+            ---
+            *This comment was automatically updated by the PR-based auto-publish workflow.*`;
+          } else {
+            commentBody = `## ❌ Publishing Failed
+            
+            **Approved by:** @${approver}
+            **Failed at:** ${new Date().toISOString()}
+            **Exit code:** ${exitCode}
+            
+            The publishing process encountered an error. Common issues:
+            
+            - **Invalid API key**: Check your \`CODEMOD_API_KEY\` secret
+            - **Version conflict**: The codemod version may already exist - try bumping the version in \`codemod.yaml\`
+            - **Network issues**: Registry may be temporarily unavailable
+            - **Invalid codemod**: Check that your codemod structure is correct
+            
+            **To retry:**
+            1. Fix the issue (e.g., bump version in \`codemod.yaml\`)
+            2. Push new changes to this PR
+            3. Give another thumbs up 👍 to this comment
+            
+            ---
+            *This comment was automatically updated by the PR-based auto-publish workflow.*`;
+          }
           
           await github.rest.issues.updateComment({
             owner: context.repo.owner,
