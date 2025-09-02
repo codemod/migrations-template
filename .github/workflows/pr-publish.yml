@@ -219,25 +219,30 @@ jobs:
         fi
         echo "✅ API key is configured"
     
-    - name: Auto-bump versions if needed
+    - name: Check for conflicts and auto-fix
       if: steps.check-reaction.outputs.approved == 'true'
+      id: conflict-check
       run: |
         COMMENT_BODY="${{ github.event.comment.body }}"
         
         # Extract codemod directories from the comment
         CODEMODS=$(echo "$COMMENT_BODY" | grep -o '`recipes/[^`]*`' | sed 's/`//g')
         
+        CONFLICTS_FOUND="false"
+        FIXED_CONFLICTS=""
+        
         for codemod_dir in $CODEMODS; do
           if [ -f "$codemod_dir/codemod.yaml" ]; then
-            echo "Checking $codemod_dir for version conflicts..."
+            echo "Checking $codemod_dir for conflicts..."
             
-            # Try to publish first to see if version exists
+            # Try to publish with dry-run to detect conflicts
             set +e
-            npx codemod@latest publish "$codemod_dir" --dry-run 2>&1 | grep -q "version.*already exists"
-            VERSION_EXISTS=$?
+            PUBLISH_OUTPUT=$(npx codemod@latest publish "$codemod_dir" --dry-run 2>&1)
+            PUBLISH_EXIT_CODE=$?
             set -e
             
-            if [ $VERSION_EXISTS -eq 0 ]; then
+            # Check for different types of conflicts
+            if echo "$PUBLISH_OUTPUT" | grep -q "version.*already exists"; then
               echo "Version conflict detected in $codemod_dir, auto-bumping..."
               
               # Extract current version
@@ -250,18 +255,39 @@ jobs:
               sed -i.bak "s/^version: .*/version: $NEW_VERSION/" "$codemod_dir/codemod.yaml"
               
               echo "✅ Bumped version from $CURRENT_VERSION to $NEW_VERSION in $codemod_dir"
+              FIXED_CONFLICTS="${FIXED_CONFLICTS}Version bumped in $codemod_dir (${CURRENT_VERSION} → ${NEW_VERSION})\n"
+              
+            elif echo "$PUBLISH_OUTPUT" | grep -q "name.*already exists\|already published\|name is taken"; then
+              echo "❌ Name conflict detected in $codemod_dir - codemod name is already taken by another author"
+              CONFLICTS_FOUND="true"
+              echo "conflict-details<<EOF" >> $GITHUB_OUTPUT
+              echo "Name conflict in $codemod_dir: The codemod name is already published by another author. Please change the 'name' field in $codemod_dir/codemod.yaml to a unique name." >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+              
+            elif [ $PUBLISH_EXIT_CODE -ne 0 ]; then
+              echo "❌ Other publishing error in $codemod_dir"
+              CONFLICTS_FOUND="true"
+              echo "conflict-details<<EOF" >> $GITHUB_OUTPUT
+              echo "Publishing error in $codemod_dir: $PUBLISH_OUTPUT" >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+              
             else
-              echo "✅ No version conflict in $codemod_dir"
+              echo "✅ No conflicts in $codemod_dir"
             fi
           fi
         done
+        
+        echo "conflicts-found=$CONFLICTS_FOUND" >> $GITHUB_OUTPUT
+        echo "fixed-conflicts<<EOF" >> $GITHUB_OUTPUT
+        echo -e "$FIXED_CONFLICTS" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
       env:
         CODEMOD_API_KEY: ${{ secrets.CODEMOD_API_KEY }}
         CODEMOD_REGISTRY_SCOPE: ${{ vars.CODEMOD_REGISTRY_SCOPE || 'codemod' }}
         CODEMOD_REGISTRY_URL: ${{ vars.CODEMOD_REGISTRY_URL || 'https://registry.codemod.com' }}
     
     - name: Extract and execute publish commands
-      if: steps.check-reaction.outputs.approved == 'true'
+      if: steps.check-reaction.outputs.approved == 'true' && steps.conflict-check.outputs.conflicts-found == 'false'
       id: publish
       run: |
         COMMENT_BODY="${{ github.event.comment.body }}"
@@ -300,16 +326,41 @@ jobs:
       with:
         script: |
           const approver = '${{ steps.check-reaction.outputs.approver }}';
+          const conflictsFound = '${{ steps.conflict-check.outputs.conflicts-found }}' === 'true';
+          const conflictDetails = '${{ steps.conflict-check.outputs.conflict-details }}';
+          const fixedConflicts = '${{ steps.conflict-check.outputs.fixed-conflicts }}';
           const success = '${{ steps.publish.outputs.success }}' === 'true';
           const exitCode = '${{ steps.publish.outputs.exit_code }}';
           
           let commentBody;
           
-          if (success) {
+          if (conflictsFound) {
+            commentBody = `## ⚠️ Publishing Blocked - Conflicts Detected
+            
+            **Approved by:** @${approver}
+            **Blocked at:** ${new Date().toISOString()}
+            
+            **Issues found:**
+            ${conflictDetails}
+            
+            **Auto-fixes applied:**
+            ${fixedConflicts || 'None'}
+            
+            **To resolve:**
+            1. Fix the conflicts (e.g., change codemod name in \`codemod.yaml\`)
+            2. Push new changes to this PR
+            3. Give another thumbs up 👍 to this comment
+            
+            ---
+            *This comment was automatically updated by the PR-based auto-publish workflow.*`;
+          } else if (success) {
             commentBody = `## ✅ Published Successfully!
             
             **Approved by:** @${approver}
             **Published at:** ${new Date().toISOString()}
+            
+            **Auto-fixes applied:**
+            ${fixedConflicts || 'None'}
             
             The codemods have been successfully published to the registry.
             
