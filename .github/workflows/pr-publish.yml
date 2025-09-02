@@ -232,7 +232,8 @@ jobs:
         COMMENT_BODY="${{ github.event.comment.body }}"
         
         # Extract codemod directories from the comment
-        CODEMODS=$(echo "$COMMENT_BODY" | grep -o '`recipes/[^`]*`' | sed 's/`//g')
+        # First try to get from the "Changed codemods:" line
+        CODEMODS=$(echo "$COMMENT_BODY" | grep "Changed codemods:" | sed 's/.*Changed codemods: *//' | sed 's/To publish.*//' | tr -d '`' | tr ',' ' ')
         
         CONFLICTS_FOUND="false"
         FIXED_CONFLICTS=""
