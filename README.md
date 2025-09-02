@@ -4,22 +4,43 @@
   <img src=".github/assets/migrations-template.png" alt="<ECOSYSTEM_NAME> Codemods" width="400" />
 </div>
 
-<div align="center">
-  <strong>Automated migrations for <ECOSYSTEM_NAME> projects</strong>
-</div>
+This repository serves as a template for open-source migrations, allowing contributors & framework maintainers to quickly whip up a repository for codemods that resolve breaking changes, refactors, and more.
 
-<div align="center">
-  <a href="https://app.codemod.com/registry/@<NAMESPACE>">
-    <img src="https://img.shields.io/badge/Codemod%20Registry-@<NAMESPACE>-blue?style=flat-square" alt="Codemod Registry" />
-  </a>
-  <a href="https://github.com/<NAMESPACE>/<ECOSYSTEM_NAME>-codemods/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License" />
-  </a>
-</div>
+This template repository comes pre-configured with a GitHub workflow that automatically publishes the latest version of your codemods, keeping them up-to-date on [Codemod Registry](https://app.codemod.com/registry).
 
----
+> **Initial setup guide (remove once the repo is customized)**
+> 
+> 1. Search and replace placeholders:
+>    - `<ECOSYSTEM_NAME>` (e.g., "React", "Node.js", "AcmeLib")
+>    - `@<NAMESPACE>` (e.g., `acme`) 
+>    - `<MAJOR_VERSION>` (e.g., `v5`)
+> 2. Scaffold new codemods under `recipes` and name them like `@<NAMESPACE>/<MAJOR_VERSION> (optional)/<codemod-name>`:
+> 
+> ```bash
+> npx codemod@latest init recipes/my-codemod
+> ```
+> 
+> 3. Build codemod manually or with **[Codemod Studio](https://app.codemod.com/studio) (recommended)** ([Read docs →](https://go.codemod.com/studio-docs)).
+> 4. Validate and test:
+> 
+> ```bash
+> npm run validate
+> npm run test
+> ```
+> 
+> 5. Commit hooks and CI run lint, validate, typecheck, and tests.
+> 
+> 6. Set up auto-publishing to [Codemod Registry](https://app.codemod.com/registry):
+> 
+> ```bash
+> # Get API key from https://app.codemod.com/api-keys
+> ./scripts/setup-auto-publish.sh
+> ```
+> 
+> This automatically publishes codemods when you push changes to `recipes/`. See [AUTO_PUBLISH_SETUP.md](./AUTO_PUBLISH_SETUP.md) for details.
 
-## About
+
+## Overview
 
 This repository contains codemods (automated migrations) for <ECOSYSTEM_NAME>. These codemods facilitate adopting new features and upgrading across breaking changes.
 

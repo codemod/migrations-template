@@ -39,16 +39,6 @@ The script will ask for your API key, registry scope (e.g., `your-org`), and reg
 - **Removed codemods**: Automatically unpublished
 - **Package naming**: `@your-scope/recipe-name`
 
-## Testing
-
-```bash
-# Test locally (recommended)
-CODEMOD_API_KEY="your-key" CODEMOD_REGISTRY_SCOPE="your-org" node scripts/test-auto-publish.mjs
-
-# Or test with real workflow
-# Make changes to recipes/ and push to main
-```
-
 ## Troubleshooting
 
 - **"Failed to login"**: Check API key is correct and has publishing permissions
