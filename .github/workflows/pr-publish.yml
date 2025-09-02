@@ -15,6 +15,11 @@ on:
         description: 'Comment ID to check for reactions'
         required: true
         type: string
+      test_publish:
+        description: 'Test the publish workflow'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   detect-changes:
@@ -111,7 +116,7 @@ jobs:
           // Check if we already commented
           const existingComment = comments.find(comment => 
             comment.user.type === 'Bot' && 
-            comment.body.includes('Show a thumbs up to this comment')
+            comment.body.includes('Ready to Publish Codemods')
           );
           
           if (existingComment) {
@@ -145,7 +150,7 @@ jobs:
             body: commentBody
           });
 
-  handle-reaction:
+  handle-comment:
     if: github.event_name == 'issue_comment'
     runs-on: ubuntu-latest
     
@@ -350,7 +355,7 @@ jobs:
             **To resolve:**
             1. Fix the conflicts (e.g., change codemod name in \`codemod.yaml\`)
             2. Push new changes to this PR
-            3. Give another thumbs up 👍 to this comment
+            3. Comment \`/publish\` again
             
             ---
             *This comment was automatically updated by the PR-based auto-publish workflow.*`;
@@ -384,7 +389,7 @@ jobs:
             **To retry:**
             1. Fix the issue (e.g., bump version in \`codemod.yaml\`)
             2. Push new changes to this PR
-            3. Give another thumbs up 👍 to this comment
+            3. Comment \`/publish\` again
             
             ---
             *This comment was automatically updated by the PR-based auto-publish workflow.*`;
