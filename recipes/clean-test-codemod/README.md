@@ -1,4 +1,4 @@
-# test-workflow-codemod
+# clean-test-codemod
 
 Transform legacy code patterns
 
@@ -6,7 +6,7 @@ Transform legacy code patterns
 
 ```bash
 # Install from registry
-codemod run test-workflow-codemod
+codemod run clean-test-codemod
 
 # Or run locally
 codemod run -w workflow.yaml
