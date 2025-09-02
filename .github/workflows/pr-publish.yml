@@ -235,7 +235,7 @@ jobs:
         
         # Extract codemod directories from the comment
         # First try to get from the "Changed codemods:" line
-        CODEMODS=$(echo "$COMMENT_BODY" | grep "Changed codemods:" | sed 's/.*Changed codemods: *//' | sed 's/To publish.*//' | tr -d '`*' | tr ',' ' ')
+        CODEMODS=$(echo "$COMMENT_BODY" | grep "Changed codemods:" | sed 's/.*Changed codemods: *//' | sed 's/To publish.*//' | tr -d '`*' | tr ',' ' ' | xargs)
         
         CONFLICTS_FOUND="false"
         FIXED_CONFLICTS=""
