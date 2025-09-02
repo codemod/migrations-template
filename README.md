@@ -1,5 +1,3 @@
-# <ECOSYSTEM_NAME> Codemods
-
 <div align="center">
   <img src=".github/assets/migrations-template.png" alt="<ECOSYSTEM_NAME> Codemods" width="400" />
 </div>
