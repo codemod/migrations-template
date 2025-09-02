@@ -2,6 +2,10 @@
   <img src=".github/assets/migrations-template.png" alt="Migrations Template" />
 </div>
 
+This repository serves as a template for open-source migrations, allowing contributors & framework maintainers to quickly whip up a repository for codemods that resolve breaking changes, refactors, and more.
+
+This template repository comes pre-configured with a GitHub workflow that automatically publishes the latest version of your codemods, keeping them up-to-date on [Codemod Registry](https://app.codemod.com/registry).
+
 > **Initial setup guide (remove once the repo is customized)**
 > 
 > 1. Search and replace placeholders:
