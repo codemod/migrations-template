@@ -159,7 +159,9 @@ jobs:
       id: check-comment
       run: |
         COMMENT_BODY="${{ github.event.comment.body }}"
-        if echo "$COMMENT_BODY" | grep -q "^/publish$"; then
+        # Trim whitespace and check for /publish command
+        TRIMMED_COMMENT=$(echo "$COMMENT_BODY" | xargs)
+        if echo "$TRIMMED_COMMENT" | grep -q "^/publish$"; then
           echo "is-publish-command=true" >> $GITHUB_OUTPUT
         else
           echo "is-publish-command=false" >> $GITHUB_OUTPUT
