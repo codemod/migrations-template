@@ -231,11 +231,26 @@ jobs:
       if: steps.check-maintainer.outputs.approved == 'true'
       id: conflict-check
       run: |
-        COMMENT_BODY="${{ github.event.comment.body }}"
+        # Get the bot's comment that contains the codemod information
+        # We need to find the bot's comment on this PR that contains "Ready to Publish Codemods"
+        echo "Finding bot's comment with codemod information..."
         
-        # Extract codemod directories from the comment
-        # First try to get from the "Changed codemods:" line
-        CODEMODS=$(echo "$COMMENT_BODY" | grep "Changed codemods:" | sed 's/.*Changed codemods: *//' | sed 's/To publish.*//' | tr -d '`*' | tr ',' ' ' | xargs)
+        # Get all comments on the PR
+        COMMENTS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments")
+        
+        # Find the bot's comment that contains "Ready to Publish Codemods"
+        BOT_COMMENT=$(echo "$COMMENTS" | jq -r '.[] | select(.user.type == "Bot" and .body | contains("Ready to Publish Codemods")) | .body')
+        
+        if [ -z "$BOT_COMMENT" ]; then
+          echo "❌ Could not find bot's comment with codemod information"
+          exit 1
+        fi
+        
+        echo "Found bot's comment, extracting codemod directories..."
+        
+        # Extract codemod directories from the bot's comment
+        CODEMODS=$(echo "$BOT_COMMENT" | grep "Changed codemods:" | sed 's/.*Changed codemods: *//' | sed 's/To publish.*//' | tr -d '`*' | tr ',' ' ' | xargs)
         
         CONFLICTS_FOUND="false"
         FIXED_CONFLICTS=""
@@ -299,13 +314,25 @@ jobs:
       if: steps.check-maintainer.outputs.approved == 'true' && steps.conflict-check.outputs.conflicts-found == 'false'
       id: publish
       run: |
-        COMMENT_BODY="${{ github.event.comment.body }}"
+        # Get the bot's comment that contains the publish commands
+        echo "Finding bot's comment with publish commands..."
         
-        # Extract commands from the comment
-        echo "Extracting commands from comment..."
+        # Get all comments on the PR
+        COMMENTS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments")
         
-        # Get the bash code block content
-        COMMANDS=$(echo "$COMMENT_BODY" | sed -n '/```bash/,/```/p' | sed '1d;$d')
+        # Find the bot's comment that contains "Ready to Publish Codemods"
+        BOT_COMMENT=$(echo "$COMMENTS" | jq -r '.[] | select(.user.type == "Bot" and .body | contains("Ready to Publish Codemods")) | .body')
+        
+        if [ -z "$BOT_COMMENT" ]; then
+          echo "❌ Could not find bot's comment with publish commands"
+          exit 1
+        fi
+        
+        echo "Found bot's comment, extracting commands..."
+        
+        # Get the bash code block content from the bot's comment
+        COMMANDS=$(echo "$BOT_COMMENT" | sed -n '/```bash/,/```/p' | sed '1d;$d')
         
         echo "Executing commands:"
         echo "$COMMANDS"
