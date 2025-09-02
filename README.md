@@ -30,12 +30,12 @@ This template repository comes pre-configured with a GitHub workflow that automa
 > 
 > 6. Set up auto-publishing to [Codemod Registry](https://app.codemod.com/registry):
 > 
-> ```bash
-> # Get API key from https://app.codemod.com/api-keys
-> ./scripts/setup-auto-publish.sh
-> ```
+> 1. **Get API key**: [https://app.codemod.com/api-keys](https://app.codemod.com/api-keys)
+> 2. **Create GitHub Environment**: Repository Settings → Environments → New environment (name it `production`)
+> 3. **Add secret**: `CODEMOD_API_KEY` with your API key
+> 4. **Optional variables**: `CODEMOD_REGISTRY_SCOPE`, `CODEMOD_REGISTRY_URL`
 > 
-> This automatically publishes codemods when you push changes to `recipes/`. See [AUTO_PUBLISH_SETUP.md](./AUTO_PUBLISH_SETUP.md) for details.
+> This automatically publishes codemods when you merge changes to `main`. See [AUTO_PUBLISH_SETUP.md](./AUTO_PUBLISH_SETUP.md) for details.
 
 
 ## Overview
