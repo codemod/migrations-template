@@ -1,0 +1,46 @@
+name: Auto-publish Codemods
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'recipes/**'
+      - '.github/workflows/auto-publish.yml'
+      - 'scripts/auto-publish.mjs'
+
+jobs:
+  auto-publish:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 2  # Need previous commit for diff
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Auto-publish codemods
+      run: node scripts/auto-publish.mjs
+      env:
+        CODEMOD_API_KEY: ${{ secrets.CODEMOD_API_KEY }}
+        CODEMOD_REGISTRY_SCOPE: ${{ vars.CODEMOD_REGISTRY_SCOPE || 'codemod' }}
+        CODEMOD_REGISTRY_URL: ${{ vars.CODEMOD_REGISTRY_URL || 'https://registry.codemod.com' }}
+    
+    - name: Commit version updates
+      if: success()
+      run: |
+        if [ -n "$(git status --porcelain)" ]; then
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add recipes/*/codemod.yaml
+          git commit -m "chore: auto-bump versions for published codemods [skip ci]"
+          git push
+        fi

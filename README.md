@@ -24,12 +24,14 @@
 > 
 > 5. Commit hooks and CI run lint, validate, typecheck, and tests.
 > 
-> 6. Publish codemods to [Codemod Registry](https://app.codemod.com/registry):
+> 6. Set up auto-publishing to [Codemod Registry](https://app.codemod.com/registry):
 > 
 > ```bash
-> # In package directory:
-> npx codemod@latest publish
+> # Get API key from https://app.codemod.com/api-keys
+> ./scripts/setup-auto-publish.sh
 > ```
+> 
+> This automatically publishes codemods when you push changes to `recipes/`. See [AUTO_PUBLISH_SETUP.md](./AUTO_PUBLISH_SETUP.md) for details.
 
 
 ## Overview
