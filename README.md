@@ -8,33 +8,19 @@
 This repository contains codemods for <FRAMEWORK_OR_SDK_NAME>. These codemods facilitate adopting new features and upgrading across breaking changes.
 
 
-## Running Codemods
-
-To run your codemods use the codemod command below:
-
-```bash
-npx codemod@latest @<NAMESPACE>/<codemod-name>
-```
-
-- `codemod-name` - name of transform. Use the name of your codemod in Codemod Registry.
-
-See the [Codemod CLI documentation](https://go.codemod.com/cli-docs) for a full list of available commands and options.
-
-## Available Codemods
-
+## Running codemods
 > [!CAUTION]
-> These scripts change source code. Commit or stash your changes before running them.
+> Codemods edit your code. Run them only on files tracked by Git, and make sure to commit or stash your changes first.
 
-List your published codemods here, e.g.:
-- `@<NAMESPACE>/<MAJOR_VERSION>/example-codemod` — short description
-
-## Important
-
-After using this template, it's recommended that you update this README with:
-
-1. Details about what your codemod does (e.g. before/after code snippets)
-2. A link to the published codemod in Codemod Registry
-3. The accurate run command
+Run codemods from the registry by using the names defined in their codemod.yaml:
+```bash
+npx codemod@latest <codemod-name>
+```
+For example: 
+```
+npx codemod@latest @nodejs/tmpDir-to-tmpdir
+```
+See the [Codemod documentation](https://go.codemod.com/cli-docs) for a full list of available CLI commands and options.
 
 ## Contributing
 
