@@ -1,5 +1,5 @@
 {
-	"name": "test-workflow-codemod",
+	"name": "clean-test-codemod",
 	"version": "0.1.0",
 	"description": "Transform legacy code patterns",
 	"type": "module",
