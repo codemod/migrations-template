@@ -15,6 +15,7 @@ jobs:
     outputs:
       codemods: ${{ steps.detect.outputs.codemods }}
       has-changes: ${{ steps.detect.outputs.has-changes }}
+      publish-commands: ${{ steps.detect.outputs.publish-commands }}
     
     steps:
     - name: Checkout code
@@ -61,10 +62,8 @@ jobs:
           fi
         done
         
-        # Store commands for later use
-        echo "PUBLISH_COMMANDS<<EOF" >> $GITHUB_ENV
-        echo -e "$PUBLISH_COMMANDS" >> $GITHUB_ENV
-        echo "EOF" >> $GITHUB_ENV
+        # Store commands as job output
+        echo "publish-commands=$PUBLISH_COMMANDS" >> $GITHUB_OUTPUT
 
   comment-on-pr:
     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.has-changes == 'true'
@@ -113,7 +112,7 @@ jobs:
           }
           
           const codemods = '${{ needs.detect-changes.outputs.codemods }}'.split(' ').filter(Boolean);
-          const publishCommands = process.env.PUBLISH_COMMANDS || '';
+          const publishCommands = '${{ needs.detect-changes.outputs.publish-commands }}';
           
           const commentBody = `## 🚀 Ready to Publish Codemods
           
