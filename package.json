@@ -8,8 +8,8 @@
     "lint": "npx -y @biomejs/biome lint .",
     "format": "npx -y @biomejs/biome format --write .",
     "validate": "node ./utils/validate-all.mjs",
-    "test": "node ./utils/run-tests.mjs",
-    "typecheck": "node scripts/typecheck.mjs",
+    "test": "./scripts/test-all.sh",
+    "typecheck": "./scripts/typecheck.sh",
     "prepare": "husky"
   },
   "devDependencies": {
