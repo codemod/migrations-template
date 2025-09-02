@@ -1,5 +1,5 @@
 <div align="center">
-  <img src=".github/assets/migrations-template.png" alt="<ECOSYSTEM_NAME> Codemods" width="400" />
+  <img src=".github/assets/migrations-template.png" alt="<ECOSYSTEM_NAME> Codemods" />
 </div>
 
 This repository serves as a template for open-source migrations, allowing contributors & framework maintainers to quickly whip up a repository for codemods that resolve breaking changes, refactors, and more.
