@@ -24,7 +24,7 @@ npm run test
 ## Scaffolding a new codemod
 
 ```bash
-npx codemod@latest init recipes/my-codemod
+npx codemod@latest init codemods/my-codemod
 ```
 
 During prompts, select appropriate options for your use case. Placeholders to adapt:

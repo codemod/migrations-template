@@ -19,8 +19,8 @@ function findWorkflows(dir) {
 }
 
 function run() {
-	const recipesRoot = join(process.cwd(), "recipes");
-	const workflows = findWorkflows(recipesRoot);
+	const codemodsRoot = join(process.cwd(), "codemods");
+	const workflows = findWorkflows(codemodsRoot);
 	for (const workflowPath of workflows) {
 		process.stdout.write(`Validating ${workflowPath}\n`);
 		const res = spawnSync(

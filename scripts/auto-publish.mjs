@@ -53,8 +53,8 @@ function getChangedFiles() {
   });
   
   if (result.status !== 0) {
-    console.log('⚠️  Could not get git diff, checking all recipes...');
-    return { changed: getAllRecipes(), removed: [] };
+    console.log('⚠️  Could not get git diff, checking all codemods...');
+    return { changed: getAllCodemods(), removed: [] };
   }
   
   const changedFiles = result.stdout.trim().split('\n').filter(Boolean);
@@ -69,7 +69,7 @@ function getChangedFiles() {
   if (deletedResult.status === 0) {
     const deletedFiles = deletedResult.stdout.trim().split('\n').filter(Boolean);
     deletedFiles.forEach(file => {
-      if (file.startsWith('recipes/')) {
+      if (file.startsWith('codemods/')) {
         const recipeName = file.split('/')[1];
         if (recipeName) {
           removedRecipes.add(recipeName);
@@ -80,7 +80,7 @@ function getChangedFiles() {
   
   // Check for modified/added files
   changedFiles.forEach(file => {
-    if (file.startsWith('recipes/')) {
+    if (file.startsWith('codemods/')) {
       const recipeName = file.split('/')[1];
       if (recipeName) {
         changedRecipes.add(recipeName);
@@ -88,8 +88,8 @@ function getChangedFiles() {
     }
   });
   
-  console.log(`📝 Found ${changedRecipes.size} changed recipes:`, Array.from(changedRecipes));
-  console.log(`🗑️  Found ${removedRecipes.size} removed recipes:`, Array.from(removedRecipes));
+  console.log(`📝 Found ${changedRecipes.size} changed codemods:`, Array.from(changedRecipes));
+  console.log(`🗑️  Found ${removedRecipes.size} removed codemods:`, Array.from(removedRecipes));
   
   return { 
     changed: Array.from(changedRecipes), 
@@ -97,23 +97,23 @@ function getChangedFiles() {
   };
 }
 
-// Get all recipes (fallback)
-function getAllRecipes() {
-  const recipesDir = join(process.cwd(), 'recipes');
-  if (!statSync(recipesDir).isDirectory()) {
+// Get all codemods (fallback)
+function getAllCodemods() {
+  const codemodsDir = join(process.cwd(), 'codemods');
+  if (!statSync(codemodsDir).isDirectory()) {
     return [];
   }
   
-  return readdirSync(recipesDir).filter(name => {
-    const recipePath = join(recipesDir, name);
-    return statSync(recipePath).isDirectory() && 
-           statSync(join(recipePath, 'workflow.yaml')).isFile();
+  return readdirSync(codemodsDir).filter(name => {
+    const codemodPath = join(codemodsDir, name);
+    return statSync(codemodPath).isDirectory() && 
+           statSync(join(codemodPath, 'workflow.yaml')).isFile();
   });
 }
 
-// Read package.json from recipe directory
-function readRecipePackageJson(recipePath) {
-  const packageJsonPath = join(recipePath, 'package.json');
+// Read package.json from codemod directory
+function readCodemodPackageJson(codemodPath) {
+  const packageJsonPath = join(codemodPath, 'package.json');
   try {
     const content = readFileSync(packageJsonPath, 'utf8');
     return JSON.parse(content);
@@ -122,9 +122,9 @@ function readRecipePackageJson(recipePath) {
   }
 }
 
-// Read codemod.yaml from recipe directory
-function readCodemodYaml(recipePath) {
-  const codemodYamlPath = join(recipePath, 'codemod.yaml');
+// Read codemod.yaml from codemod directory
+function readCodemodYaml(codemodPath) {
+  const codemodYamlPath = join(codemodPath, 'codemod.yaml');
   try {
     const content = readFileSync(codemodYamlPath, 'utf8');
     // Simple YAML parsing for version field
@@ -146,8 +146,8 @@ function bumpVersion(version) {
 }
 
 // Update version in codemod.yaml
-function updateCodemodYamlVersion(recipePath, newVersion) {
-  const codemodYamlPath = join(recipePath, 'codemod.yaml');
+function updateCodemodYamlVersion(codemodPath, newVersion) {
+  const codemodYamlPath = join(codemodPath, 'codemod.yaml');
   try {
     let content = readFileSync(codemodYamlPath, 'utf8');
     content = content.replace(/version:\s*["']?[^"'\n]+["']?/, `version: "${newVersion}"`);
@@ -249,17 +249,17 @@ async function main() {
     // Login to registry
     loginToRegistry();
     
-    // Get changed and removed recipes
+    // Get changed and removed codemods
     const { changed: changedRecipes, removed: removedRecipes } = getChangedFiles();
     
     if (changedRecipes.length === 0 && removedRecipes.length === 0) {
-      console.log('ℹ️  No recipes changed or removed, nothing to do');
+      console.log('ℹ️  No codemods changed or removed, nothing to do');
       return;
     }
     
-    // Process removed recipes first
+    // Process removed codemods first
     for (const recipeName of removedRecipes) {
-      console.log(`\n🗑️  Processing removed recipe: ${recipeName}`);
+      console.log(`\n🗑️  Processing removed codemod: ${recipeName}`);
       
       const packageName = `@${REGISTRY_SCOPE}/${recipeName}`;
       console.log(`📋 Package: ${packageName}`);
@@ -278,21 +278,21 @@ async function main() {
       }
     }
     
-    // Process each changed recipe
+    // Process each changed codemod
     for (const recipeName of changedRecipes) {
-      console.log(`\n🔄 Processing recipe: ${recipeName}`);
+      console.log(`\n🔄 Processing codemod: ${recipeName}`);
       
-      const recipePath = join(process.cwd(), 'recipes', recipeName);
+      const codemodPath = join(process.cwd(), 'codemods', recipeName);
       
-      // Validate recipe has required files
-      if (!statSync(join(recipePath, 'workflow.yaml')).isFile()) {
+      // Validate codemod has required files
+      if (!statSync(join(codemodPath, 'workflow.yaml')).isFile()) {
         console.log(`⚠️  Skipping ${recipeName}: no workflow.yaml found`);
         continue;
       }
       
       // Get package info
-      const packageJson = readRecipePackageJson(recipePath);
-      const codemodYaml = readCodemodYaml(recipePath);
+      const packageJson = readCodemodPackageJson(codemodPath);
+      const codemodYaml = readCodemodYaml(codemodPath);
       
       if (!codemodYaml) {
         console.log(`⚠️  Skipping ${recipeName}: no codemod.yaml found`);
@@ -311,7 +311,7 @@ async function main() {
       if (!packageExists) {
         // First time publishing
         console.log(`🆕 First time publishing ${packageName}`);
-        const success = publishPackage(recipePath, packageName, true);
+        const success = publishPackage(codemodPath, packageName, true);
         if (success) {
           console.log(`🎉 Successfully published ${packageName} for the first time!`);
         }
@@ -324,10 +324,10 @@ async function main() {
         console.log(`⬆️  Bumping version from ${currentVersion} to ${newVersion}`);
         
         // Update version in codemod.yaml
-        updateCodemodYamlVersion(recipePath, newVersion);
+        updateCodemodYamlVersion(codemodPath, newVersion);
         
         // Publish new version
-        const success = publishPackage(recipePath, packageName, false);
+        const success = publishPackage(codemodPath, packageName, false);
         if (success) {
           console.log(`🎉 Successfully published ${packageName} v${newVersion}!`);
         }

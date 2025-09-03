@@ -6,7 +6,7 @@ set -e
 echo "🧪 Testing JSSG codemods..."
 
 # Find JSSG codemods (those with js-ast-grep in workflow.yaml)
-find recipes -name "workflow.yaml" | while read -r workflow; do
+find codemods -name "workflow.yaml" | while read -r workflow; do
     recipe_dir=$(dirname "$workflow")
     recipe_name=$(basename "$recipe_dir")
     

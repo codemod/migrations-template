@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'recipes/**'
+      - 'codemods/**'
       - '.github/workflows/auto-publish.yml'
       - 'scripts/auto-publish.mjs'
 
@@ -62,7 +62,7 @@ jobs:
         if [ -n "$(git status --porcelain)" ]; then
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add recipes/*/codemod.yaml
+          git add codemods/*/codemod.yaml
           git commit -m "chore: auto-bump versions for published codemods [skip ci]"
           git push
         fi
