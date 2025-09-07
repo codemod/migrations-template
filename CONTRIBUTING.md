@@ -1,49 +1,49 @@
 # Contributing
 
-Thank you for helping improve <ECOSYSTEM_NAME> codemods. This project provides automated migrations to help the community adopt new features and upgrade across breaking changes.
+Thanks for helping users adopt the latest features with your codemods!  
 
-## How we work
+### Before You Open a PR
 
-- Propose: open an issue before large changes
-- Safety: codemods must be safe, predictable, idempotent
-- Tests: include multiple fixtures (positive/negative/idempotent)
-- Documentation: update per-recipe README and root docs
+- **Issue**: Check for an existing issue, or open one first.  
+- **Safety**: Codemods must be safe, predictable, and idempotent (running twice should not change code again). Avoid mixing patterns with different safety levels.
+- **Naming**: In `codemod.yaml`, the codemod name must start with `@<scope>`, where `<scope>` is this repo's GitHub org.
+- **Tests**: Add multiple fixtures (positive and negative).  
+- **Docs**: Update the README for your codemod.  
 
-For workflow structure and orchestration details, see: https://docs.codemod.com/cli/workflows
+### Development
 
-## Getting started
+- Scaffold a new codemod:
+  ```bash
+  npx codemod@latest init
+  ```
+- Test your codemod locally;
+    ```bash
+    cd /path/to/sample/project
+    npx codemod workflow run -w /path/to/my-codemod/workflow.yaml
+    ```
+### Project Layout
 
-```bash
-npm install
-npm run lint
-npm run validate
-npm run typecheck
-npm run test
-```
+- Place all codemods in the `codemods/` directory.
 
-## Scaffolding a new codemod
+### Checks
 
-```bash
-npx codemod@latest init codemods/my-codemod
-```
+- Lint/format: npm run check (Biome)
+- Types: npm run typecheck
 
-During prompts, select appropriate options for your use case. Placeholders to adapt:
-- Name: `@<NAMESPACE>/<MAJOR_VERSION>/<codemod-name>`
+### Pull Requests
 
-## Commit messages
+- Describe the codemod and its migration use case.
+- Follow Conventional Commits:
 
-Use Conventional Commits:
-- `feat(scope):` add a new codemod or capability
-- `fix(scope):` bugfixes in a transform or tests
-- `docs(scope):` docs-only changes
-- `refactor(scope):` code changes that neither fix a bug nor add a feature
-- `test(scope):` add or adjust fixtures/tests
-- `chore(scope):` tooling, CI, formatting, repo hygiene
+| Type     | Usage                                |
+|----------|--------------------------------------|
+| feat     | New codemod or capability            |
+| fix      | Bugfix in a transform or test        |
+| docs     | Documentation-only changes           |
+| refactor | Non-feature, non-bugfix code changes |
+| test     | Add or update fixtures/tests         |
+| chore    | Tooling, CI, formatting, repo hygiene|
 
-## Security
+### License
 
-See SECURITY.md and report privately.
-
-## License
-
-MIT
+By contributing, you agree that your work will be licensed under the MIT License.
