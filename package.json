@@ -1,19 +1,15 @@
 {
-  "name": "<NAMESPACE>-codemods",
+  "name": "<SCOPE>-codemods",
   "private": true,
   "version": "0.1.0",
-  "description": "Codemods for migrating <ECOSYSTEM_NAME> projects",
+  "description": "Codemods for <SCOPE>",
   "type": "module",
   "scripts": {
     "lint": "npx -y @biomejs/biome lint .",
     "format": "npx -y @biomejs/biome format --write .",
-    "validate": "node ./utils/validate-all.mjs",
-    "test": "./scripts/test-all.sh",
-    "typecheck": "tsc --noEmit",
-    "prepare": "husky"
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "husky": "^9.0.0",
     "typescript": "^5.5.4"
   }
 }
