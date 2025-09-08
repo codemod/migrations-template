@@ -14,7 +14,7 @@
 >       - All official codemods appear in the Registry under that scope.  
 >       - **Important:** In each `codemod.yaml`, make sure `name` starts with your scope.
 >
-> ### Authorize the GitHub Action
+> ### Authorize GitHub Action
 > 1. Generate an API key at [app.codemod.com/api-keys](https://app.codemod.com/api-keys).  
 > 2. In your repo: **Settings → Secrets and variables → Actions**  
 >    1. Create a repository secret:  
@@ -29,7 +29,7 @@ Community contributions are welcome and appreciated! Check open issues for codem
 
 ## Running codemods
 > [!CAUTION]
-> Codemods modify code. Run them only on Git-tracked files, and commit or stash changes first.
+> Codemods modify code! Run them only on Git-tracked files, and commit or stash changes first.
 
 ### From the registry
 Recommended for the best UX. This downloads the package from the [Registry](https://app.codemod.com/registry).
