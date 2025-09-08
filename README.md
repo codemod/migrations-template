@@ -15,11 +15,10 @@
 >
 > ### Authorize GitHub Action
 > 1. Generate an API key at [app.codemod.com/api-keys](https://app.codemod.com/api-keys).  
-> 2. In your repo: **Settings → Environments**  
->    1. Create an environment (e.g. `production`) if it doesn’t exist.  
-> 3. Open it → **Add environment secret**:  
->    - Name: `CODEMOD_API_KEY`  
->    - Value: the key from step 1.  
+> 2. In your repo: **Settings → Secrets & variables → actions**  
+>    1. Create a repository secret.    
+>      - Name: `CODEMOD_API_KEY`  
+>      - Value: the key from step 1.  
 >
 > ✅ Done! Now, after a codemod PR is merged, you can trigger a GitHub Action to auto-publish it to the [Codemod Registry](https://app.codemod.com/registry) under your org scope. See [Node.js codemods](https://codemod.link/nodejs-official) for an example.
 ---
