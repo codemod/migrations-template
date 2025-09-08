@@ -36,7 +36,7 @@ Recommended for the best UX. This downloads the package from the [Registry](http
 
 ```bash
 npx codemod@latest <codemod-name>
-````
+```
 
 For example:
 
