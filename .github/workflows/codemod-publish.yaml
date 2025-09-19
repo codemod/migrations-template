@@ -3,11 +3,11 @@ name: Publish Codemod
 on:
   push:
     tags:
-      - "*@v*" # eg: codemod-name@v1.0.0
+      - "*@v*" # eg: codemod-name@v1.0.0 or @scopename/codemodname@v1.0.0
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag to publish (format: codemod-name@v1.0.0)"
+        description: "Tag to publish (format: codemod-name@v1.0.0 or @scopename/codemodname@v1.0.0)"
         required: true
         type: string
 
@@ -49,15 +49,20 @@ jobs:
           fi
 
           # Validate tag format
-          if [[ ! "$TAG" =~ ^[a-zA-Z0-9_-]+@v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          # Supports: @scopename/codemodname@v1.0.0 or codemodname@v1.0.0
+          # Does NOT support: codemodname/subname@v1.0.0 (non-scoped packages can't have slashes)
+          if [[ ! "$TAG" =~ ^(@[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+|[a-zA-Z0-9_-]+)@v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "❌ Invalid tag format: $TAG"
-            echo "Expected format: codemod-name@v1.0.0"
+            echo "Expected formats:"
+            echo "  - @scopename/codemodname@v1.0.0 (scoped packages)"
+            echo "  - codemodname@v1.0.0 (non-scoped packages)"
+            echo "Note: Non-scoped packages cannot contain slashes"
             exit 1
           fi
 
           # Extract components
-          CODEMOD_NAME="${TAG%@*}"      # Everything before @
-          VERSION="${TAG#*@}"   # Everything after @
+          CODEMOD_NAME="${TAG%@v*}"     # Everything before @v (handles both scoped and non-scoped)
+          VERSION="v${TAG#*@v}"         # Everything after @v, with v prefix
 
           # Set outputs
           echo "version=$VERSION" >> $GITHUB_OUTPUT
