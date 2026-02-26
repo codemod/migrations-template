@@ -1,6 +1,6 @@
 schema_version: "1.0"
 
-name: "jssg-codemod"
+name: "sample-codemod"
 version: "0.1.0"
 description: "Transform legacy code patterns"
 author: "Author <author@example.com>"
