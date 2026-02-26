@@ -1,10 +1,7 @@
 # Dependencies
 node_modules/
-package-lock.json
-pnpm-lock.yaml
 
-# Test files that get transformed
-**/tests/fixtures/input.*
+# Test files that get transformed (generated outputs under tests/input/)
 **/tests/input/*
 
 # System files

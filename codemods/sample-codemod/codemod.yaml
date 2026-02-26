@@ -1,6 +1,7 @@
 schema_version: "1.0"
 
-name: "sample-codemod"
+# Replace @scope with your org name; name must start with your scope for registry visibility
+name: "@scope/jssg-codemod"
 version: "0.1.0"
 description: "Transform legacy code patterns"
 author: "Author <author@example.com>"

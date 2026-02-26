@@ -5,6 +5,7 @@
   "description": "Codemods for <SCOPE>",
   "type": "module",
   "scripts": {
+    "check": "npm run lint && npm run format",
     "lint": "npx -y @biomejs/biome lint .",
     "format": "npx -y @biomejs/biome format --write .",
     "typecheck": "tsc --noEmit"
