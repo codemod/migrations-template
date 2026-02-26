@@ -11,11 +11,7 @@
 >    2. Pick GitHub, choose your org and the new codemods repo. This installs the Codemod GitHub App and reserves a **scope** with your org name. 
 >     - Benefit: Only members of your org can publish codemods with a name that starts wihh your scope.
 >     - **Important**: In `codemod.yaml`, the name must start with your scope, otherwise it won’t appear when users filter for your scope in the registry.
-> 4. In Codemod, switch from personal account to org account and generate a [Codemod API key](https://app.codemod.com/api-keys).
-> 5. In your GitHub repo: **Settings → Secrets & variables → actions**  
->    1. Create a repository secret.    
->      - Name: `CODEMOD_API_KEY`  
->      - Value: the key from step 1.  
+> 4. Configure [trusted publisher](https://docs.codemod.com) in Codemod (no API key needed). The publish workflow uses OIDC to authenticate.
 >
 > ✅ Done! After a codemod PR is merged, you can trigger the GitHub Action to auto-publish it to the [Codemod Registry](https://app.codemod.com/registry) under your org scope. See [Node.js codemods](https://codemod.link/nodejs-official) for an example.
 > 

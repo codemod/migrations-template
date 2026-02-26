@@ -1,6 +1,6 @@
 {
 	"include": [
-		"utils/**/*.ts"
+		"_typecheck.ts"
 	],
 	"exclude": [
 		"**/tests/**/*",

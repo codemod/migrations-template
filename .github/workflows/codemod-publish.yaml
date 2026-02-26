@@ -1,5 +1,10 @@
 name: Publish Codemod
 
+# Required for OIDC trusted publisher (no API key needed)
+permissions:
+  id-token: write
+  contents: read
+
 on:
   push:
     tags:
@@ -183,19 +188,20 @@ jobs:
             echo "has-package-json=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Install codemod dependencies
+        if: steps.check-package-json.outputs.has-package-json == 'true'
+        working-directory: ${{ steps.find-codemod.outputs.codemod-path }}
+        run: npm install --no-frozen-lockfile
+
       - name: Run javascript ast-grep codemod Tests
         if: steps.check-package-json.outputs.has-package-json == 'true'
         working-directory: ${{ steps.find-codemod.outputs.codemod-path }}
         run: npm test
 
-      - name: Authenticate with Codemod registry
-        env:
-          CODEMOD_API_KEY: ${{ secrets.CODEMOD_API_KEY }}
-        run: npx codemod@latest login --api-key "$CODEMOD_API_KEY"
-
       - name: Publish codemod
-        working-directory: ${{ steps.find-codemod.outputs.codemod-path }}
-        run: npx codemod@latest publish
+        uses: codemod/publish-action@v1
+        with:
+          path: ${{ steps.find-codemod.outputs.codemod-path }}
 
       - name: Create release summary
         env:
