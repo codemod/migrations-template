@@ -1,0 +1,11 @@
+{
+  "react-hoist-nested-components": [
+    {
+      "cardinality": {
+        "change-type": "skipped-closure",
+        "file": "tests/skip-closure/input.tsx"
+      },
+      "count": 1
+    }
+  ]
+}

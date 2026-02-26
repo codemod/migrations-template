@@ -1,0 +1,12 @@
+{
+  "react-hoist-nested-components": [
+    {
+      "cardinality": {
+        "change-type": "hoisted",
+        "component-form": "function-decl",
+        "file": "tests/move-function-decl/input.tsx"
+      },
+      "count": 1
+    }
+  ]
+}

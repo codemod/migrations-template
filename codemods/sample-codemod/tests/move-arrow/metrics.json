@@ -1,0 +1,12 @@
+{
+  "react-hoist-nested-components": [
+    {
+      "cardinality": {
+        "change-type": "hoisted",
+        "component-form": "arrow",
+        "file": "tests/move-arrow/input.tsx"
+      },
+      "count": 1
+    }
+  ]
+}

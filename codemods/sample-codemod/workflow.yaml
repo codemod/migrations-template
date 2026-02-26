@@ -2,12 +2,86 @@
 
 version: "1"
 
+params:
+  schema:
+    create_branch:
+      type: boolean
+      default: true
+      description: Create a git branch and commit after each step
+    run_ai_step:
+      type: boolean
+      default: false
+      description: Run AI step for closure-dependent tricky cases
+    publish_pr:
+      type: boolean
+      default: false
+      description: Create PR after push
+    main_branch:
+      type: string
+      default: "main"
+      description: Target branch for PR
+
 nodes:
   - id: apply-transforms
     name: Apply AST Transformations
     type: automatic
     steps:
-      - name: "Scan typescript files and apply fixes"
+      - name: "Create branch"
+        run: |
+          BRANCH="codemod/react-hoist-nested-components-$(date +%Y%m%d-%H%M%S)"
+          git checkout -b "$BRANCH" 2>/dev/null || true
+        if: params.create_branch
+      - name: "Hoist nested React components"
         js-ast-grep:
           js_file: scripts/codemod.ts
-          language: "typescript"
+          language: "tsx"
+          semantic_analysis: "file"
+          include:
+            - "**/*.tsx"
+            - "**/*.jsx"
+          exclude:
+            - "**/node_modules/**"
+            - "**/vendor/**"
+            - "**/*.test.*"
+            - "**/*.spec.*"
+            - "**/__pycache__/**"
+      - name: "Commit AST transformations"
+        run: |
+          git add -A
+          [ -n "$(git status --porcelain)" ] && git commit -m "fix: hoist nested React components to module scope" || true
+        if: params.create_branch
+
+  - id: ai-tricky-cases
+    name: AI Tricky Cases
+    type: automatic
+    depends_on: [apply-transforms]
+    steps:
+      - name: "AI step for closure-dependent cases"
+        if: params.run_ai_step
+        ai:
+          prompt: |
+            You are performing a React code migration. Modify files directly.
+
+            Goal: Resolve closure-dependent nested components that were flagged by the codemod.
+
+            Handle these cases:
+            1. Components with `// codemod: closure-dependent` comment — hoist to module scope and pass outer vars as props.
+            2. Ensure prop types/interfaces are added if needed.
+            3. Preserve behavior and formatting.
+
+            Constraints: Add TODO if unsure; keep existing logic intact.
+      - name: "Commit AI fixes"
+        run: |
+          git add -A
+          [ -n "$(git status --porcelain)" ] && git commit -m "fix: AI-assisted resolution of closure-dependent nested components" || true
+        if: params.create_branch
+
+  - id: publish
+    name: Publish
+    type: automatic
+    depends_on: [ai-tricky-cases]
+    steps:
+      - name: "Push branch to remote"
+        run: |
+          BRANCH=$(git branch --show-current)
+          git push -u origin "$BRANCH"

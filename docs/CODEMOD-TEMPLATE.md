@@ -68,6 +68,8 @@ registry:
 
 ## 3. workflow.yaml
 
+> **IMPORTANT (agents):** New codemods MUST implement the full node structure below: `apply-transforms` (with Create branch, js-ast-grep, and Commit steps), `ai-tricky-cases` (when the migration has tricky cases), and `publish`. Include the `params` block. 
+
 **Schema comment (first line):**
 ```yaml
 # yaml-language-server: $schema=https://raw.githubusercontent.com/codemod/codemod/refs/heads/main/schemas/workflow.json
@@ -85,7 +87,7 @@ registry:
 | pr_title | string | — | Optional |
 | pr_body | string | — | Optional, multi_line: true |
 
-**Node structure:** Consider the below nodes. If all patterns can be handled by AST codemod, omit the AI step. If the migration can be divided into multiple shippable PRs, add a dedicated node for each part.
+**Node structure:** Implement all three nodes below at minimum. Omit only the AI *step* (inside ai-tricky-cases) when all patterns can be handled by the AST codemod; keep the ai-tricky-cases node with `depends_on`. Include all steps (Create branch, Commit, Push, Create PR) — they are gated by params. If the migration can be divided into multiple shippable PRs, add a dedicated node for each part.
 
 ### 1. apply-transforms (type: automatic)
 
@@ -97,7 +99,7 @@ registry:
 - Step 2: "[Task-specific name]" — `js-ast-grep`:
   - `js_file: scripts/codemod.ts`
   - `language: "<target_lang>"` — use ast-grep alias (e.g. `tsx`, `python`, `go`, `rust`)
-  - `semantic_analysis: workspace` (when supported)
+  - `semantic_analysis: workspace` — **required** when the codemod must verify symbol definitions, trace imports, or update references across files. Without it, `node.definition()` and `node.references()` return no-op. Use Codemod MCP `get_jssg_instructions` for Part 4: Semantic Analysis.
   - `include`: globs for target files (e.g. `**/*.tsx`, `**/*.py`, `**/*.go`, `**/*.rs`)
   - `exclude`: `**/node_modules/**`, `**/vendor/**`, `**/*.test.*`, `**/*.spec.*`, `**/__pycache__/**` (adapt to language)
 - Step 3: "Commit AST transformations" — `if: params.create_branch`, run:
@@ -154,6 +156,7 @@ registry:
   - **change-difficulty** (`simple` | `hard`): When there's a mix of straightforward vs complex transforms. Omit if all are similar.
   - **file**: `file: root.filename()` for matched pattern
   - You can add domain-specific cardinalities beyond these.
+- **Symbol verification:** When the codemod must distinguish symbols by origin (e.g., only transform `useState` from React, not local variables) or update definitions and references across files, use `node.definition()` and `node.references()`. Enable `semantic_analysis: workspace` in the workflow. Get full instructions via Codemod MCP `get_jssg_instructions`.
 - Export default `transform` function.
 
 ---

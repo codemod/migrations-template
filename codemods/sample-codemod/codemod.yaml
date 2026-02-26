@@ -1,10 +1,9 @@
 schema_version: "1.0"
 
-# Replace @scope with your org name; name must start with your scope for registry visibility
-name: "@scope/jssg-codemod"
+name: "sample-codemod"
 version: "0.1.0"
-description: "Transform legacy code patterns"
-author: "Author <author@example.com>"
+description: "Move React components defined inside other components to module scope to prevent state resets and re-render bugs"
+author: "Codemod Authors"
 license: "MIT"
 workflow: "workflow.yaml"
 category: "migration"
@@ -12,7 +11,7 @@ category: "migration"
 targets:
   languages: ["typescript"]
 
-keywords: ["transformation", "migration"]
+keywords: ["react", "upgrade", "standardization", "performance"]
 
 registry:
   access: "public"
