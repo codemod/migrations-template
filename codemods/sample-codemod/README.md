@@ -17,7 +17,7 @@ Hoist nested components to module scope so they are defined once. Components tha
 ## Usage
 
 ```bash
-npx codemod workflow run -w codemods/react-hoist-nested-components/workflow.yaml -t /path/to/your/project
+npx codemod workflow run -w codemods/sample-codemod/workflow.yaml -t /path/to/your/project
 ```
 
 Or run the transform directly:
@@ -28,12 +28,15 @@ npx codemod jssg run -l tsx ./scripts/codemod.ts /path/to/project
 
 ## Params
 
-| Param         | Type    | Default | Description                                  |
-|---------------|---------|---------|----------------------------------------------|
-| create_branch | boolean | true    | Create git branch and commit after each step |
-| run_ai_step   | boolean | false   | Run AI step for closure-dependent cases     |
-| publish_pr    | boolean | false   | Create PR after push                         |
-| main_branch   | string  | main    | Target branch for PR                         |
+| Param            | Type    | Default | Description                                      |
+|------------------|---------|---------|--------------------------------------------------|
+| commit_per_step  | boolean | false   | Commit after each change-producing step          |
+| run_ai_step      | boolean | false   | Run AI step for closure-dependent tricky cases   |
+| publish_pr       | boolean | false   | Create PR after push                             |
+| main_branch      | string  | main    | Target branch for PR                             |
+| api_token        | string  | —       | GitHub API token when gh CLI unavailable         |
+| pr_title         | string  | —       | Optional PR title                                |
+| pr_body          | string  | —       | Optional PR body                                 |
 
 ## Metrics
 

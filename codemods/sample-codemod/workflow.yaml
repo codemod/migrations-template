@@ -4,10 +4,10 @@ version: "1"
 
 params:
   schema:
-    create_branch:
+    commit_per_step:
       type: boolean
-      default: true
-      description: Create a git branch and commit after each step
+      default: false
+      description: Commit after each change-producing step with a meaningful message
     run_ai_step:
       type: boolean
       default: false
@@ -20,22 +20,28 @@ params:
       type: string
       default: "main"
       description: Target branch for PR
+    api_token:
+      type: string
+      description: GitHub API token when gh CLI unavailable
+      secret: true
+    pr_title:
+      type: string
+      description: Optional PR title
+    pr_body:
+      type: string
+      description: Optional PR body
+      multi_line: true
 
 nodes:
   - id: apply-transforms
     name: Apply AST Transformations
     type: automatic
     steps:
-      - name: "Create branch"
-        run: |
-          BRANCH="codemod/react-hoist-nested-components-$(date +%Y%m%d-%H%M%S)"
-          git checkout -b "$BRANCH" 2>/dev/null || true
-        if: params.create_branch
       - name: "Hoist nested React components"
         js-ast-grep:
           js_file: scripts/codemod.ts
           language: "tsx"
-          semantic_analysis: "file"
+          semantic_analysis: workspace
           include:
             - "**/*.tsx"
             - "**/*.jsx"
@@ -49,7 +55,7 @@ nodes:
         run: |
           git add -A
           [ -n "$(git status --porcelain)" ] && git commit -m "fix: hoist nested React components to module scope" || true
-        if: params.create_branch
+        if: params.commit_per_step
 
   - id: ai-tricky-cases
     name: AI Tricky Cases
@@ -74,7 +80,7 @@ nodes:
         run: |
           git add -A
           [ -n "$(git status --porcelain)" ] && git commit -m "fix: AI-assisted resolution of closure-dependent nested components" || true
-        if: params.create_branch
+        if: params.commit_per_step
 
   - id: publish
     name: Publish
@@ -85,3 +91,12 @@ nodes:
         run: |
           BRANCH=$(git branch --show-current)
           git push -u origin "$BRANCH"
+      - name: "Create PR to main branch"
+        run: |
+          BRANCH=$(git branch --show-current)
+          BASE="${PARAM_MAIN_BRANCH:-main}"
+          TITLE="${PARAM_PR_TITLE:-fix: hoist nested React components to module scope}"
+          BODY="${PARAM_PR_BODY:-Automated codemod: hoist nested React components.}"
+          [ -n "$PARAM_API_TOKEN" ] && export GITHUB_TOKEN="$PARAM_API_TOKEN"
+          gh pr create --base "$BASE" --head "$BRANCH" --title "$TITLE" --body "$BODY"
+        if: params.publish_pr
