@@ -68,7 +68,7 @@ registry:
 
 ## 3. workflow.yaml
 
-> **IMPORTANT (agents):** New codemods MUST implement the full node structure below: `apply-transforms` (with Create branch, js-ast-grep, and Commit steps), `ai-tricky-cases` (when the migration has tricky cases), and `publish`. Include the `params` block. 
+> **IMPORTANT (agents):** New codemods MUST implement the full node structure below: `apply-transforms` (js-ast-grep and optional Commit steps), `ai-tricky-cases` (when the migration has tricky cases), and `publish`. Include the `params` block. Codemods run on the current branch. 
 
 **Schema comment (first line):**
 ```yaml
@@ -79,7 +79,7 @@ registry:
 
 | Param | Type | Default | Notes |
 |-------|------|---------|-------|
-| create_branch | boolean | true | Create branch and commit after each step |
+| commit_per_step | boolean | **false** | Commit after each change-producing step with a meaningful message |
 | run_ai_step | boolean | false | Run AI step for tricky cases — only add if AI step is needed |
 | publish_pr | boolean | false | Create PR after push |
 | main_branch | string | "main" | Target branch for PR |
@@ -87,25 +87,20 @@ registry:
 | pr_title | string | — | Optional |
 | pr_body | string | — | Optional, multi_line: true |
 
-**Node structure:** Implement all three nodes below at minimum. Omit only the AI *step* (inside ai-tricky-cases) when all patterns can be handled by the AST codemod; keep the ai-tricky-cases node with `depends_on`. Include all steps (Create branch, Commit, Push, Create PR) — they are gated by params. If the migration can be divided into multiple shippable PRs, add a dedicated node for each part.
+**Node structure:** Implement all three nodes below at minimum. Omit only the AI *step* (inside ai-tricky-cases) when all patterns can be handled by the AST codemod; keep the ai-tricky-cases node with `depends_on`. Include all steps (Commit, Push, Create PR) — they are gated by params. **Commit steps** use `if: params.commit_per_step` and must have task-specific, meaningful messages (e.g. `fix: migrate X to Y`, `fix: AI-assisted resolution of [case]`). If the migration can be divided into multiple shippable PRs, add a dedicated node for each part.
 
 ### 1. apply-transforms (type: automatic)
 
-- Step 1: "Create branch" — `if: params.create_branch`, run:
-  ```bash
-  BRANCH="codemod/<slug>-$(date +%Y%m%d-%H%M%S)"
-  git checkout -b "$BRANCH" 2>/dev/null || true
-  ```
-- Step 2: "[Task-specific name]" — `js-ast-grep`:
+- Step 1: "[Task-specific name]" — `js-ast-grep`:
   - `js_file: scripts/codemod.ts`
   - `language: "<target_lang>"` — use ast-grep alias (e.g. `tsx`, `python`, `go`, `rust`)
   - `semantic_analysis: workspace` — **required** when the codemod must verify symbol definitions, trace imports, or update references across files. Without it, `node.definition()` and `node.references()` return no-op. Use Codemod MCP `get_jssg_instructions` for Part 4: Semantic Analysis.
   - `include`: globs for target files (e.g. `**/*.tsx`, `**/*.py`, `**/*.go`, `**/*.rs`)
   - `exclude`: `**/node_modules/**`, `**/vendor/**`, `**/*.test.*`, `**/*.spec.*`, `**/__pycache__/**` (adapt to language)
-- Step 3: "Commit AST transformations" — `if: params.create_branch`, run:
+- Step 2: "Commit AST transformations" — `if: params.commit_per_step`, run:
   ```bash
   git add -A
-  [ -n "$(git status --porcelain)" ] && git commit -m "fix: [task-specific message]" || true
+  [ -n "$(git status --porcelain)" ] && git commit -m "fix: [task-specific meaningful message]" || true
   ```
 
 ### 2. ai-tricky-cases (type: automatic, depends_on: [apply-transforms])
@@ -113,7 +108,7 @@ registry:
 - Step 1: AI step — `if: params.run_ai_step`, with:
   - **prompt**: Opening "You are performing a [domain] code migration. Modify files directly." + Goal, Handle these tricky cases (1–6 from [SPECIFIC TRICKY CASES]), The fix, Constraints (preserve behavior, keep formatting, add TODO if unsure)
   - **system_prompt**: Domain expert persona + migration-specific guidance
-- Step 2: "Commit AI fixes" — `if: params.create_branch`, run:
+- Step 2: "Commit AI fixes" — `if: params.commit_per_step`, run:
   ```bash
   git add -A
   [ -n "$(git status --porcelain)" ] && git commit -m "fix: AI-assisted resolution of [tricky-case summary]" || true
@@ -135,8 +130,6 @@ registry:
   [ -n "$PARAM_API_TOKEN" ] && export GITHUB_TOKEN="$PARAM_API_TOKEN"
   gh pr create --base "$BASE" --head "$BRANCH" --title "$TITLE" --body "$BODY"
   ```
-
-**Branch naming:** `codemod/<slug>-$(date +%Y%m%d-%H%M%S)`
 
 ---
 
