@@ -47,7 +47,7 @@ category: "migration"
 targets:
   languages: ["typescript"]
 
-# Transformation type keywrods/tags — pick one primary per codemod (avoid mixing breaking-change and feature-adoption):
+# Transformation type keywords/tags — pick one primary per codemod (avoid mixing breaking-change and feature-adoption):
 #   upgrade          - upgrade code to newer versions (encompasses breaking changes and feature adoption)
 #   breaking-change  - adapt to framework/library breaking API changes
 #   feature-adoption - adopt new optional or incremental features
@@ -168,6 +168,7 @@ registry:
   },
   "devDependencies": {
     "@codemod.com/jssg-types": "latest",
+    "@jssg/utils": "latest",
     "typescript": "latest"
   }
 }

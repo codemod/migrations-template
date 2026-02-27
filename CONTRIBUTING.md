@@ -16,7 +16,7 @@ Thanks for helping users adopt the latest features with your codemods!
   ```bash
   npx codemod@latest init
   ```
-- Test your codemod locally;
+- Test your codemod locally:
     ```bash
     cd /path/to/sample/project
     npx codemod workflow run -w /path/to/my-codemod/workflow.yaml

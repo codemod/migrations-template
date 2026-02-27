@@ -3,7 +3,7 @@ import type TSX from "codemod:ast-grep/langs/tsx";
 import { useMetricAtom } from "codemod:metrics";
 
 // Cardinalities:
-//   change-type: "hoisted" | "skipped-closure" | "skipped-flagged"
+//   change-type: "hoisted" | "skipped-closure"
 //   component-form: "arrow" | "function-decl"
 
 const hoistedMetric = useMetricAtom("react-hoist-nested-components");
