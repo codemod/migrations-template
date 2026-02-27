@@ -81,13 +81,13 @@ registry:
 |-------|------|---------|-------|
 | commit_per_step | boolean | **false** | Commit after each change-producing step with a meaningful message |
 | run_ai_step | boolean | false | Run AI step for tricky cases — only add if AI step is needed |
-| publish_pr | boolean | false | Create PR after push |
+| publish_pr | boolean | false | Push branch and create PR (when true; agents must not push by default) |
 | main_branch | string | "main" | Target branch for PR |
 | api_token | string | — | secret: true, for GitHub API when gh CLI unavailable |
 | pr_title | string | — | Optional |
 | pr_body | string | — | Optional, multi_line: true |
 
-**Node structure:** Implement all three nodes below at minimum. Omit only the AI *step* (inside ai-tricky-cases) when all patterns can be handled by the AST codemod; keep the ai-tricky-cases node with `depends_on`. Include all steps (Commit, Push, Create PR) — they are gated by params. **Commit steps** use `if: params.commit_per_step` and must have task-specific, meaningful messages (e.g. `fix: migrate X to Y`, `fix: AI-assisted resolution of [case]`). If the migration can be divided into multiple shippable PRs, add a dedicated node for each part.
+**Node structure:** Implement all three nodes below at minimum. Omit only the AI *step* (inside ai-tricky-cases) when all patterns can be handled by the AST codemod; keep the ai-tricky-cases node with `depends_on`. Include all steps (Commit, Push, Create PR) — they are gated by params. **Do not push to remote by default** — the Push step must use `if: params.publish_pr`. **Commit steps** use `if: params.commit_per_step` and must have task-specific, meaningful messages (e.g. `fix: migrate X to Y`, `fix: AI-assisted resolution of [case]`). If the migration can be divided into multiple shippable PRs, add a dedicated node for each part.
 
 ### 1. apply-transforms (type: automatic)
 
@@ -116,7 +116,7 @@ registry:
 
 ### 3. publish (type: automatic, depends_on: [ai-tricky-cases])
 
-- Step 1: "Push branch to remote" — always run:
+- Step 1: "Push branch to remote" — `if: params.publish_pr`, run:
   ```bash
   BRANCH=$(git branch --show-current)
   git push -u origin "$BRANCH"

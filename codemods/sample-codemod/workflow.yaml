@@ -15,7 +15,7 @@ params:
     publish_pr:
       type: boolean
       default: false
-      description: Create PR after push
+      description: Push branch and create PR (off by default)
     main_branch:
       type: string
       default: "main"
@@ -91,6 +91,7 @@ nodes:
         run: |
           BRANCH=$(git branch --show-current)
           git push -u origin "$BRANCH"
+        if: params.publish_pr
       - name: "Create PR to main branch"
         run: |
           BRANCH=$(git branch --show-current)

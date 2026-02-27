@@ -32,7 +32,7 @@ npx codemod jssg run -l tsx ./scripts/codemod.ts /path/to/project
 |------------------|---------|---------|--------------------------------------------------|
 | commit_per_step  | boolean | false   | Commit after each change-producing step          |
 | run_ai_step      | boolean | false   | Run AI step for closure-dependent tricky cases   |
-| publish_pr       | boolean | false   | Create PR after push                             |
+| publish_pr       | boolean | false   | Push branch and create PR (off by default)        |
 | main_branch      | string  | main    | Target branch for PR                             |
 | api_token        | string  | —       | GitHub API token when gh CLI unavailable         |
 | pr_title         | string  | —       | Optional PR title                                |
