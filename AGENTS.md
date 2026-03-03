@@ -29,10 +29,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for PR conventions, commit message format
 3. **Target language:** Use jssg/ast-grep alias (e.g. `tsx`, `python`, `go`, `rust`, `java`).
 4. **Full spec:** Read [docs/CODEMOD-TEMPLATE.md](docs/CODEMOD-TEMPLATE.md) for file structure, workflow nodes, params, metrics, and examples.
 5. **Workflow structure:** Use the full workflow from [docs/CODEMOD-TEMPLATE.md](docs/CODEMOD-TEMPLATE.md) (apply-transforms with js-ast-grep and optional Commit steps, ai-tricky-cases when tricky cases exist, publish node). Codemods run on the current branch by default — do not create a new branch. Do not push to remote; Push steps must be gated by `params.publish_pr`. Per-step commit steps are **off by default** and gated by the `commit_per_step` param — when enabled, agents must commit after each change-producing step with a meaningful, task-specific message.
+6. **SKILL.md:** Create `SKILL.md` at the package root to make the codemod Agent Skill compatible. See [docs/CODEMOD-TEMPLATE.md](docs/CODEMOD-TEMPLATE.md) § SKILL.md for structure and requirements.
 
 If the user's request is unclear, gather what you can and work with them to reach clarity before implementing.
 
 ## Links
 
 - [CONTRIBUTING.md](CONTRIBUTING.md) — conventions and safety
-- [docs/CODEMOD-TEMPLATE.md](docs/CODEMOD-TEMPLATE.md) — complete codemod package specification
+- [docs/CODEMOD-TEMPLATE.md](docs/CODEMOD-TEMPLATE.md) — complete codemod package specification (includes SKILL.md)

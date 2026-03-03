@@ -19,6 +19,7 @@ When drafting your plan, define:
 codemods/<slug>/
 ├── codemod.yaml
 ├── workflow.yaml
+├── SKILL.md
 ├── package.json
 ├── README.md
 └── scripts/
@@ -194,3 +195,26 @@ Include: **Problem**, **Solution**, **Usage** (`npx codemod workflow run -w code
 ## 8. Validation
 
 Run `npx codemod workflow validate codemods/<slug>/workflow.yaml` before committing.
+
+---
+
+## 9. SKILL.md
+
+Create `SKILL.md` at the package root to make the codemod Agent Skill compatible. SKILL.md provides **operational instructions** for AI agents; it does not describe the migration itself (that lives in workflow steps and scripts).
+
+**Frontmatter:** The YAML frontmatter at the top must be an **exact copy** of `codemod.yaml`. No invented fields, no deviations.
+
+**Body requirements:**
+
+- **Read the workflow graph:** Parse `workflow.yaml` nodes and `depends_on` to understand execution order (e.g. apply-transforms → ai-tricky-cases → publish).
+- **Minimal adaptation:** How to adjust `include`/`exclude` globs or `scripts/codemod.ts` logic based on user code patterns.
+- **Step-by-step execution:** Run steps in topological order (respect `depends_on`). After each step: validate outputs (`npm test`, `npm run check-types`, `npx codemod workflow validate workflow.yaml`), review diffs, then proceed.
+- **AI steps:** Treat the AI step prompt as context for edge cases that AST transforms cannot handle. Apply AI steps only where indicated by the workflow (`run_ai_step=true`). Keep changes localized and reviewable.
+- **Explicit exclusions:** Do not include a high-level "description of changes" or migration overview. Focus on: understand, tweak, run, adapt.
+
+**Acceptance criteria:**
+
+- [ ] SKILL.md exists in package root
+- [ ] Frontmatter faithfully reflects `codemod.yaml`
+- [ ] Body explains workflow graph reading, minimal adaptation, safe execution, and AI step usage
+- [ ] No redundant "description of changes" section
