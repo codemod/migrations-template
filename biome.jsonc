@@ -1,1 +1,7 @@
-{"$schema":"https://biomejs.dev/schemas/2.4.4/schema.json","files":{"includes":["."]},"formatter":{"enabled":true,"lineWidth":100},"linter":{"enabled":true},"javascript":{"formatter":{"quoteStyle":"double"}}}
+{
+	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+	"files": { "includes": ["."] },
+	"formatter": { "enabled": true, "lineWidth": 100 },
+	"linter": { "enabled": true },
+	"javascript": { "formatter": { "quoteStyle": "double" } }
+}

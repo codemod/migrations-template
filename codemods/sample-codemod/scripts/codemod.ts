@@ -308,6 +308,7 @@ async function transform(root: SgRoot<TSX>): Promise<string | null> {
 	}
 
 	if (edits.length === 0) return null;
+	
 	return rootNode.commitEdits(edits);
 }
 

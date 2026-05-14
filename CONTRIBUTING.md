@@ -21,6 +21,7 @@ Thanks for helping users adopt the latest features with your codemods!
     cd /path/to/sample/project
     npx codemod workflow run -w /path/to/my-codemod/workflow.yaml
     ```
+
 ### Project Layout
 
 - Place all codemods in the `codemods/` directory.
