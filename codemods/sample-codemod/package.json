@@ -1,12 +1,12 @@
 {
-  "name": "sample-codemod",
-  "version": "0.1.0",
-  "description": "Move React components defined inside other components to module scope",
-  "type": "module",
-  "scripts": {
-    "test": "npx codemod@latest jssg test -l tsx ./scripts/codemod.ts"
-  },
-  "devDependencies": {
-    "@jssg/utils": "latest"
-  }
+	"name": "sample-codemod",
+	"version": "0.1.0",
+	"description": "Move React components defined inside other components to module scope",
+	"type": "module",
+	"scripts": {
+		"test": "npx codemod@latest jssg test -l tsx ./scripts/codemod.ts"
+	},
+	"devDependencies": {
+		"@jssg/utils": "latest"
+	}
 }

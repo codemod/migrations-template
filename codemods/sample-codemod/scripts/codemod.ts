@@ -1,6 +1,7 @@
 import type { Edit, SgNode, SgRoot } from "codemod:ast-grep";
 import type TSX from "codemod:ast-grep/langs/tsx";
 import { useMetricAtom } from "codemod:metrics";
+import path from "node:path";
 
 // Cardinalities:
 //   change-type: "hoisted" | "skipped-closure"
@@ -8,32 +9,154 @@ import { useMetricAtom } from "codemod:metrics";
 
 const hoistedMetric = useMetricAtom("react-hoist-nested-components");
 
+function getMetricFilePath(filename: string): string {
+	const relativePath = path.isAbsolute(filename)
+		? path.relative(process.cwd(), filename)
+		: filename;
+	return relativePath.split(path.sep).join("/");
+}
+
 /** Intrinsic HTML/SVG elements - not variable references */
 const INTRINSIC_ELEMENTS = new Set([
-	"a", "abbr", "address", "area", "article", "aside", "audio", "b", "base",
-	"bdi", "bdo", "blockquote", "body", "br", "button", "canvas", "caption",
-	"cite", "code", "col", "colgroup", "data", "datalist", "dd", "del", "details",
-	"dfn", "dialog", "div", "dl", "dt", "em", "embed", "fieldset", "figcaption",
-	"figure", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "head",
-	"header", "hgroup", "hr", "html", "i", "iframe", "img", "input", "ins", "kbd",
-	"label", "legend", "li", "link", "main", "map", "mark", "menu", "meta", "meter",
-	"nav", "noscript", "object", "ol", "optgroup", "option", "output", "p", "param",
-	"picture", "pre", "progress", "q", "rp", "rt", "ruby", "s", "samp", "section",
-	"select", "slot", "small", "source", "span", "strong", "style", "sub", "summary",
-	"sup", "table", "tbody", "td", "template", "textarea", "tfoot", "th", "thead",
-	"time", "title", "tr", "track", "u", "ul", "var", "video", "wbr",
-	"svg", "path", "circle", "rect", "line", "ellipse", "polyline", "polygon",
-	"g", "defs", "use", "stop", "linearGradient", "radialGradient",
+	"a",
+	"abbr",
+	"address",
+	"area",
+	"article",
+	"aside",
+	"audio",
+	"b",
+	"base",
+	"bdi",
+	"bdo",
+	"blockquote",
+	"body",
+	"br",
+	"button",
+	"canvas",
+	"caption",
+	"cite",
+	"code",
+	"col",
+	"colgroup",
+	"data",
+	"datalist",
+	"dd",
+	"del",
+	"details",
+	"dfn",
+	"dialog",
+	"div",
+	"dl",
+	"dt",
+	"em",
+	"embed",
+	"fieldset",
+	"figcaption",
+	"figure",
+	"footer",
+	"form",
+	"h1",
+	"h2",
+	"h3",
+	"h4",
+	"h5",
+	"h6",
+	"head",
+	"header",
+	"hgroup",
+	"hr",
+	"html",
+	"i",
+	"iframe",
+	"img",
+	"input",
+	"ins",
+	"kbd",
+	"label",
+	"legend",
+	"li",
+	"link",
+	"main",
+	"map",
+	"mark",
+	"menu",
+	"meta",
+	"meter",
+	"nav",
+	"noscript",
+	"object",
+	"ol",
+	"optgroup",
+	"option",
+	"output",
+	"p",
+	"param",
+	"picture",
+	"pre",
+	"progress",
+	"q",
+	"rp",
+	"rt",
+	"ruby",
+	"s",
+	"samp",
+	"section",
+	"select",
+	"slot",
+	"small",
+	"source",
+	"span",
+	"strong",
+	"style",
+	"sub",
+	"summary",
+	"sup",
+	"table",
+	"tbody",
+	"td",
+	"template",
+	"textarea",
+	"tfoot",
+	"th",
+	"thead",
+	"time",
+	"title",
+	"tr",
+	"track",
+	"u",
+	"ul",
+	"var",
+	"video",
+	"wbr",
+	"svg",
+	"path",
+	"circle",
+	"rect",
+	"line",
+	"ellipse",
+	"polyline",
+	"polygon",
+	"g",
+	"defs",
+	"use",
+	"stop",
+	"linearGradient",
+	"radialGradient",
 ]);
 
 function isReactComponent(node: SgNode<TSX>): boolean {
 	if (node.is("function_declaration")) {
-	return node.has({ rule: { kind: "jsx_element" } }) ||
-		node.has({ rule: { kind: "jsx_self_closing_element" } });
+		return (
+			node.has({ rule: { kind: "jsx_element" } }) ||
+			node.has({ rule: { kind: "jsx_self_closing_element" } })
+		);
 	}
 	if (node.is("arrow_function") || node.is("function")) {
-	return node.has({ rule: { kind: "jsx_element" } }) ||
-		node.has({ rule: { kind: "jsx_self_closing_element" } });
+		return (
+			node.has({ rule: { kind: "jsx_element" } }) ||
+			node.has({ rule: { kind: "jsx_self_closing_element" } })
+		);
 	}
 	return false;
 }
@@ -84,7 +207,11 @@ function getEnclosingStatement(innerComponent: SgNode<TSX>): SgNode<TSX> {
 	let node: SgNode<TSX> | null = innerComponent;
 	while (node) {
 		if (node.is("statement_block") || node.is("program")) break;
-		if (node.is("function_declaration") || node.is("lexical_declaration") || node.is("variable_declaration")) {
+		if (
+			node.is("function_declaration") ||
+			node.is("lexical_declaration") ||
+			node.is("variable_declaration")
+		) {
 			return node;
 		}
 		node = node.parent();
@@ -107,10 +234,7 @@ function getOuterScopeBindings(outerComponent: SgNode<TSX>): Set<string> {
 	if (body) {
 		for (const decl of body.findAll({
 			rule: {
-				any: [
-					{ kind: "variable_declarator" },
-					{ kind: "function_declaration" },
-				],
+				any: [{ kind: "variable_declarator" }, { kind: "function_declaration" }],
 			},
 		})) {
 			if (decl.is("variable_declarator")) {
@@ -207,6 +331,7 @@ async function transform(root: SgRoot<TSX>): Promise<string | null> {
 	const rootNode = root.root();
 	const program = rootNode;
 	const edits: Edit[] = [];
+	const metricFile = getMetricFilePath(root.filename());
 
 	// Find nested components: function decl or const/let = arrow/function inside another component
 	const functionDecls = program.findAll({
@@ -246,7 +371,9 @@ async function transform(root: SgRoot<TSX>): Promise<string | null> {
 	});
 
 	for (const { node: declOrStmt, outer } of candidates) {
-		const component = declOrStmt.is("function_declaration") ? declOrStmt : getComponentNode(declOrStmt);
+		const component = declOrStmt.is("function_declaration")
+			? declOrStmt
+			: getComponentNode(declOrStmt);
 		if (!component) continue;
 
 		const name = getComponentName(declOrStmt);
@@ -255,7 +382,7 @@ async function transform(root: SgRoot<TSX>): Promise<string | null> {
 		const closureDependent = hasClosureDependency(component, outer, name);
 
 		if (closureDependent) {
-			hoistedMetric.increment({ "change-type": "skipped-closure", "file": root.filename() });
+			hoistedMetric.increment({ "change-type": "skipped-closure", file: metricFile });
 			// Add a flag comment above the nested component (preserve indentation)
 			const stmt = getEnclosingStatement(component);
 			const start = stmt.range().start.index;
@@ -284,7 +411,9 @@ async function transform(root: SgRoot<TSX>): Promise<string | null> {
 		// function_declaration needs no trailing semicolon; const/let already has one
 		const textToInsert = stmt.is("function_declaration")
 			? `${componentText}\n\n`
-			: (componentText.endsWith(";") ? `${componentText}\n\n` : `${componentText};\n\n`);
+			: componentText.endsWith(";")
+				? `${componentText}\n\n`
+				: `${componentText};\n\n`;
 
 		edits.push({
 			startPos: outerStart,
@@ -294,9 +423,7 @@ async function transform(root: SgRoot<TSX>): Promise<string | null> {
 		// Remove statement and the newline after it (up to but not including next statement's indent)
 		const stmtRange = stmt.range();
 		const nextStmt = stmt.next();
-		const removalEnd = nextStmt
-			? nextStmt.range().start.index
-			: stmtRange.end.index;
+		const removalEnd = nextStmt ? nextStmt.range().start.index : stmtRange.end.index;
 		edits.push({
 			startPos: stmtRange.start.index,
 			endPos: removalEnd,
@@ -304,11 +431,11 @@ async function transform(root: SgRoot<TSX>): Promise<string | null> {
 		});
 
 		const form = declOrStmt.is("function_declaration") ? "function-decl" : "arrow";
-		hoistedMetric.increment({ "change-type": "hoisted", "component-form": form, "file": root.filename() });
+		hoistedMetric.increment({ "change-type": "hoisted", "component-form": form, file: metricFile });
 	}
 
 	if (edits.length === 0) return null;
-	
+
 	return rootNode.commitEdits(edits);
 }
 

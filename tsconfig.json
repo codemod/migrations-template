@@ -1,13 +1,6 @@
 {
-	"include": [
-		"codemods/**/*.ts",
-		"codemods/**/*.tsx",
-		"codemods/**/*.js",
-		"codemods/**/*.jsx"
-	],
-	"exclude": [
-		"**/tests/**/*",
-	],
+	"include": ["codemods/**/*.ts", "codemods/**/*.tsx", "codemods/**/*.js", "codemods/**/*.jsx"],
+	"exclude": ["**/tests/**/*"],
 	"compilerOptions": {
 		"target": "ES2020",
 		"module": "ESNext",
@@ -18,9 +11,6 @@
 		"resolveJsonModule": true,
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,
-		"types": [
-			"@codemod.com/jssg-types"
-		]
+		"types": ["@codemod.com/jssg-types", "node"]
 	}
 }
-

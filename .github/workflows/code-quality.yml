@@ -2,23 +2,37 @@ name: Code Quality
 
 on:
   push:
-    branches: ["*"]
     paths:
       - "codemods/**/*.js"
       - "codemods/**/*.ts"
       - "codemods/**/*.tsx"
+      - "codemods/**/*.jsx"
+      - "codemods/**/codemod.yaml"
+      - "codemods/**/workflow.yaml"
       - "codemods/**/package.json"
+      - "codemods/**/package-lock.json"
+      - "codemods/**/tests/**"
       - "package.json"
-      - ".github/workflows/ci.yml"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "biome.jsonc"
+      - ".github/workflows/code-quality.yml"
   pull_request:
-    branches: ["*"]
     paths:
       - "codemods/**/*.js"
       - "codemods/**/*.ts"
       - "codemods/**/*.tsx"
+      - "codemods/**/*.jsx"
+      - "codemods/**/codemod.yaml"
+      - "codemods/**/workflow.yaml"
       - "codemods/**/package.json"
+      - "codemods/**/package-lock.json"
+      - "codemods/**/tests/**"
       - "package.json"
-      - ".github/workflows/ci.yml"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "biome.jsonc"
+      - ".github/workflows/code-quality.yml"
     types:
       - opened
       - ready_for_review
@@ -40,6 +54,12 @@ jobs:
         with:
           persist-credentials: false
           show-progress: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          cache: "npm"
+          node-version: "lts/*"
 
       - run: npm ci
       - run: node --run check
@@ -75,27 +95,40 @@ jobs:
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           cache: "npm"
-          check-latest: true
-          node-version-file: ".nvmrc"
+          node-version: "lts/*"
 
       - run: npm ci
 
       - name: Run tests related to changes
         shell: bash
-        run: >
-          changed_paths=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }})
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            base_sha="${{ github.event.pull_request.base.sha }}"
+          elif [[ "${{ github.event.before }}" =~ ^0+$ ]]; then
+            base_sha="$(git merge-base origin/${{ github.event.repository.default_branch }} HEAD)"
+          else
+            base_sha="${{ github.event.before }}"
+          fi
 
-          # run everything?
-          if echo "$changed_paths" | grep -qE '^(package\.json|\.github/workflows/ci\.yml|utils/)$'; then
-            npm run test --workspaces
+          changed_paths="$(git diff --name-only "$base_sha" "${{ github.sha }}")"
+
+          # Run everything when shared configuration or workflow behavior changes.
+          if echo "$changed_paths" | grep -qE '^(package(-lock)?\.json|tsconfig\.json|biome\.jsonc|\.github/workflows/code-quality\.yml)$'; then
+            npm run test --workspaces --if-present
             exit 0
           fi
 
-          # run for specific workspace(s)
-          npm run test $(
-            echo "$changed_paths" \
-            | grep '^codemods/'
-            | cut -d/ -f1,2
-            | sort -u
-            | sed 's/^/--workspace=/'
-          )
+          codemod_paths="$(echo "$changed_paths" | grep '^codemods/' || true)"
+          workspaces="$(
+            echo "$codemod_paths" \
+              | cut -d/ -f1,2 \
+              | sort -u \
+              | sed 's/^/--workspace=/'
+          )"
+
+          if [[ -z "$workspaces" ]]; then
+            echo "No codemod workspaces changed; skipping before/after tests."
+            exit 0
+          fi
+
+          npm run test --if-present $workspaces
