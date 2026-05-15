@@ -7,6 +7,7 @@ author: "Codemod Authors"
 license: "MIT"
 workflow: "workflow.yaml"
 category: "migration"
+repository: "https://github.com/codemod/migrations-template/tree/main/codemods/sample-codemod"
 targets:
   languages: ["typescript"]
 keywords: ["react", "upgrade", "standardization", "performance"]

@@ -1,18 +1,23 @@
 {
-  "name": "<SCOPE>-codemods",
-  "private": true,
-  "version": "0.1.0",
-  "description": "Codemods for <SCOPE>",
-  "type": "module",
-  "scripts": {
-    "check": "npm run lint && npm run format",
-    "lint": "npx -y @biomejs/biome lint .",
-    "format": "npx -y @biomejs/biome format --write .",
-    "typecheck": "tsc --noEmit"
-  },
-  "devDependencies": {
-    "@jssg/utils": "^0.0.2",
-    "typescript": "^5.9.3"
-  }
+	"name": "<SCOPE>-codemods",
+	"private": true,
+	"version": "0.1.0",
+	"description": "Codemods for <SCOPE>",
+	"type": "module",
+	"scripts": {
+		"check": "biome check .",
+		"lint": "biome lint .",
+		"format": "biome format --write .",
+		"typecheck": "tsc --noEmit && echo 'TypeScript type check passed!'",
+		"test": "npm run test --workspaces --if-present"
+	},
+	"workspaces": [
+		"codemods/*"
+	],
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.15",
+		"@codemod.com/jssg-types": "^1.6.0",
+		"@types/node": "^25.8.0",
+		"typescript": "^6.0.3"
+	}
 }
-

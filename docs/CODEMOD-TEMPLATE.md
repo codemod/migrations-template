@@ -44,6 +44,7 @@ author: "Your Name <you@example.com>"
 license: "MIT"
 workflow: "workflow.yaml"
 category: "migration"
+repository: "<URL to codemod source code, e.g. GitHub repo>"
 
 targets:
   languages: ["typescript"]

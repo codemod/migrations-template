@@ -166,12 +166,11 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 'lts/*'
 
       - name: Install project dependencies
         run: |
-          npm install --no-frozen-lockfile
-          npm install -g codemod@latest
+          npm ci
 
       # Run test before login to not waste time if it fails
       - name: Validate workflow
@@ -191,12 +190,12 @@ jobs:
       - name: Install codemod dependencies
         if: steps.check-package-json.outputs.has-package-json == 'true'
         working-directory: ${{ steps.find-codemod.outputs.codemod-path }}
-        run: npm install --no-frozen-lockfile
+        run: npm ci
 
       - name: Run javascript ast-grep codemod Tests
         if: steps.check-package-json.outputs.has-package-json == 'true'
         working-directory: ${{ steps.find-codemod.outputs.codemod-path }}
-        run: npm test
+        run: node --run test
 
       - name: Publish codemod
         uses: codemod/publish-action@v1
