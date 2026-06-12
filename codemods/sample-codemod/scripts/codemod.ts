@@ -11,7 +11,20 @@ import { useMetricAtom } from 'codemod:metrics'
 const hoistedMetric = useMetricAtom('react-hoist-nested-components')
 
 function getMetricFilePath(filename: string): string {
-  const relativePath = path.isAbsolute(filename) ? path.relative(process.cwd(), filename) : filename
+  const posix = filename.replaceAll(/\\/g, '/')
+  const stripped = posix.replace(/^\/\/\?\//, '').replace(/^\/\/\?\\/, '')
+
+  if (stripped.startsWith('tests/')) {
+    return stripped
+  }
+
+  const testsIndex = stripped.lastIndexOf('/tests/')
+  if (testsIndex !== -1) {
+    return stripped.slice(testsIndex + 1)
+  }
+
+  const normalized = path.normalize(stripped)
+  const relativePath = path.isAbsolute(normalized) ? path.relative(process.cwd(), normalized) : normalized
   return relativePath.split(path.sep).join('/')
 }
 
