@@ -1,23 +1,35 @@
 {
-	"name": "<SCOPE>-codemods",
-	"private": true,
-	"version": "0.1.0",
-	"description": "Codemods for <SCOPE>",
-	"type": "module",
-	"scripts": {
-		"check": "biome check .",
-		"lint": "biome lint .",
-		"format": "biome format --write .",
-		"typecheck": "tsc --noEmit && echo 'TypeScript type check passed!'",
-		"test": "npm run test --workspaces --if-present"
-	},
-	"workspaces": [
-		"codemods/*"
-	],
-	"devDependencies": {
-		"@biomejs/biome": "^2.4.15",
-		"@codemod.com/jssg-types": "^1.6.0",
-		"@types/node": "^25.8.0",
-		"typescript": "^6.0.3"
-	}
+  "name": "<SCOPE>-codemods",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Codemods for <SCOPE>",
+  "type": "module",
+  "scripts": {
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "lint": "oxlint --type-aware --type-check --deny-warnings .",
+    "lint:fix": "oxlint --type-aware --type-check --fix .",
+    "test": "pnpm --filter \"./codemods/*\" test",
+    "check-types": "pnpm --filter \"./codemods/*\" run check-types",
+    "ci": "pnpm run test && pnpm run check-types",
+    "docs:links": "markdown-link-check README.md CONTRIBUTING.md docs/CODEMOD-TEMPLATE.md",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.12",
+    "codemod": "^1.12.3",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.4",
+    "markdown-link-check": "^3.13.6",
+    "oxfmt": "^0.49.0",
+    "oxlint": "^1.66.0",
+    "oxlint-tsgolint": "^0.22.1",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.19.0"
 }

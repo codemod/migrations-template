@@ -1,50 +1,196 @@
 # Contributing
 
-Thanks for helping users adopt the latest features with your codemods!  
+Thanks for helping users adopt the latest features with your codemods!
 
-### Before You Open a PR
+Using an AI coding agent (Codex, Cursor, Claude Code, Aider, etc.)? See [`AGENTS.md`](./AGENTS.md) for codemod authoring guidance and common mistakes to avoid.
 
-- **Issue**: Check for an existing issue, or open one first.  
+## Development setup
+
+This repository uses **pnpm** (see `packageManager` in the root `package.json`), **Changesets** for releases, and **oxfmt + oxlint** (not Prettier/ESLint) for formatting and linting.
+
+```bash
+# Install dependencies (also wires the Husky pre-commit hook)
+pnpm install
+
+# Format all files
+pnpm run format
+
+# Check formatting without writing
+pnpm run format:check
+
+# Lint all files
+pnpm run lint
+
+# Lint and auto-fix
+pnpm run lint:fix
+
+# Run all codemod package tests
+pnpm run test
+
+# Typecheck all codemod packages
+pnpm run check-types
+
+# Same checks as CI (tests + typecheck)
+pnpm run ci
+
+# Verify URLs in tracked Markdown (also runs in CI)
+pnpm run docs:links
+```
+
+Run one workspace package (the `pnpm --filter` value is the `name` field in that package's `package.json`):
+
+```bash
+pnpm --filter <package-name> test
+pnpm --filter <package-name> check-types
+```
+
+For example:
+
+```bash
+pnpm --filter sample-codemod test
+pnpm --filter sample-codemod check-types
+```
+
+Use Node **22** locally (see [`.nvmrc`](./.nvmrc)) to match CI.
+
+## Pre-commit hook
+
+After `pnpm install`, Husky runs **lint-staged** before each commit: oxfmt and oxlint on staged files, plus targeted `pnpm test` when you touch `codemods/**/scripts/**/*.ts`. If something fails, fix or stage the updates and try again.
+
+The hook only inspects **staged** files. Files you did not touch can still fail a full-repo `pnpm run format:check` / `pnpm run lint` — CI focuses on **changed** paths for pull requests.
+
+## CI
+
+Three workflows support quality and releases:
+
+- **`code-quality.yml` — Lint & types:** runs format, lint, and typecheck on every matching PR/push.
+- **`code-quality.yml` — Before/after tests:** cross-platform jssg tests on macOS, Ubuntu, and Windows; only affected codemod packages run on PRs.
+- **`release.yml` + `publish.yml` — Release automation:** see _Release workflow_ below.
+
+Match the local checks (`pnpm run format`, `pnpm run lint`, `pnpm run ci`) before you push.
+
+## Before you open a PR
+
+- **Issue**: Check for an existing issue, or open one first.
 - **Safety**: Codemods must be safe, predictable, and idempotent (running twice should not change code again). Avoid mixing patterns with different safety levels.
 - **Naming**: In `codemod.yaml`, the codemod name must start with `@<scope>`, where `<scope>` is this repo's GitHub org.
-- **Tests**: Add multiple fixtures (positive and negative).  
-- **Docs**: Update the README for your codemod.  
+- **Tests**: Add multiple fixtures (positive and negative).
+- **Docs**: Update the README for your codemod.
 
-### Development
+## Making changes
 
-- Scaffold a new codemod:
-  ```bash
-  npx codemod@latest init
-  ```
-- Test your codemod locally:
-    ```bash
-    cd /path/to/sample/project
-    npx codemod workflow run -w /path/to/my-codemod/workflow.yaml
-    ```
+1. Create a branch from `main`.
+2. Make your changes and add or update fixtures under `tests/<case>/`.
+3. Run `pnpm run format`, `pnpm run lint`, and `pnpm run ci` to verify everything passes.
+4. Add a changeset for every codemod package you touched (see below).
+5. Open a pull request.
 
-### Project Layout
+## Adding a changeset
 
-- Place all codemods in the `codemods/` directory.
+This repo uses [Changesets](https://github.com/changesets/changesets) for versioning and releases. **Every PR that changes a codemod package under `codemods/` should include a changeset**, unless you use the `skip-changeset` label (see CI). Details live in [`.changeset/README.md`](./.changeset/README.md).
 
-### Checks
+```bash
+pnpm changeset
+```
 
-- Lint/format: npm run check (Biome)
-- Types: npm run typecheck
+Follow the prompts:
 
-### Pull Requests
+1. Select the affected codemod(s).
+2. Choose the semver bump — **patch** for fixes, **minor** for new features, **major** for breaking changes.
+3. Write a short summary.
+
+Commit the new Markdown file under `.changeset/` with your PR.
+
+`pnpm run version-packages` (run by automation on `main`, not usually by hand) runs `changeset version`, which bumps `version` in each affected `package.json`. Do not edit `version` in `package.json` by hand — automation owns that field.
+
+## Release workflow
+
+Releases are fully automated via `.github/workflows/release.yml` and `.github/workflows/publish.yml` on every push to `main`:
+
+1. Merge a PR that includes one or more changesets into `main`.
+2. The `release` job detects the pending changesets and runs `pnpm run version-packages` (`changeset version`), which bumps `version` in each affected `package.json`.
+3. The bot opens (or updates) a **Version Packages** pull request on branch `changeset-release/version-packages` — it does not push directly to `main`.
+4. Merge that PR (required checks apply like any other PR).
+5. On the next push to `main`, `scripts/tag-and-publish.sh` creates a `<name>@v<version>` git tag for every bumped package and pushes the tags.
+6. The `publish` job fans out a parallel matrix over the changed directories and publishes each codemod via [`codemod/publish-action`](https://github.com/codemod/publish-action).
+
+For emergencies (re-publish a specific codemod without a full release cycle), use the **Publish Codemod (Manual)** workflow (`.github/workflows/publish.yml`) and supply the codemod slug.
+
+Do not hand-edit `version` in `package.json` to simulate a release — automation owns bumps.
+
+## Adding a new codemod
+
+Scaffold a new codemod with the CLI:
+
+```bash
+npx codemod init
+```
+
+New packages live under `codemods/`, for example:
+
+```
+codemods/<slug>/
+  scripts/codemod.ts   # JSSG transform
+  tests/               # input / expected fixtures
+  codemod.yaml         # manifest
+  workflow.yaml
+  package.json
+  tsconfig.json
+  README.md
+  SKILL.md
+```
+
+Conventions:
+
+- The codemod name in `codemod.yaml` **and** `package.json` must start with `@<scope>` (e.g. `@myorg/my-codemod`).
+- Keep rewrites conservative. If a step requires a human decision, prefer a detector or recipe parameter over an unsafe transform.
+- Use an existing sibling codemod as a template. See [docs/CODEMOD-TEMPLATE.md](./docs/CODEMOD-TEMPLATE.md) for the full package spec.
+
+Test your codemod locally against a sample project:
+
+```bash
+cd /path/to/sample/project
+npx codemod workflow run -w /path/to/my-codemod/workflow.yaml
+```
+
+## Package shape
+
+Each codemod package should include:
+
+- `package.json` with at least `test` and `check-types` scripts.
+- `codemod.yaml`, `workflow.yaml`, `tsconfig.json`, `README.md`, `SKILL.md`
+- `scripts/codemod.ts`
+- `tests/<case>/input.*` and `tests/<case>/expected.*`
+
+Keep transformations atomic and verifiable with fixtures.
+
+## Checks
+
+| Command                 | What it does                   |
+| ----------------------- | ------------------------------ |
+| `pnpm run format`       | Auto-format with oxfmt         |
+| `pnpm run format:check` | Check formatting (no writes)   |
+| `pnpm run lint`         | Lint with oxlint (type-aware)  |
+| `pnpm run lint:fix`     | Lint and auto-fix with oxlint  |
+| `pnpm run test`         | Run all codemod tests          |
+| `pnpm run check-types`  | Typecheck all codemod packages |
+| `pnpm run ci`           | Full check (test + typecheck)  |
+| `pnpm run docs:links`   | Verify Markdown links          |
+
+## Pull requests
 
 - Describe the codemod and its migration use case.
-- Follow Conventional Commits:
+- Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
-| Type     | Usage                                |
-|----------|--------------------------------------|
-| feat     | New codemod or capability            |
-| fix      | Bugfix in a transform or test        |
-| docs     | Documentation-only changes           |
-| refactor | Non-feature, non-bugfix code changes |
-| test     | Add or update fixtures/tests         |
-| chore    | Tooling, CI, formatting, repo hygiene|
+| Type       | Usage                                 |
+| ---------- | ------------------------------------- |
+| `feat`     | New codemod or capability             |
+| `fix`      | Bugfix in a transform or test         |
+| `docs`     | Documentation-only changes            |
+| `refactor` | Non-feature, non-bugfix code changes  |
+| `test`     | Add or update fixtures/tests          |
+| `chore`    | Tooling, CI, formatting, repo hygiene |
 
-### License
+## License
 
 By contributing, you agree that your work will be licensed under the MIT License.

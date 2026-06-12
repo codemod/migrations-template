@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/codemod/codemod/refs/heads/main/schemas/workflow.json
 
-version: "1"
+version: '1'
 
 params:
   schema:
@@ -18,7 +18,7 @@ params:
       description: Push branch and create PR (off by default)
     main_branch:
       type: string
-      default: "main"
+      default: 'main'
       description: Target branch for PR
     api_token:
       type: string
@@ -37,21 +37,21 @@ nodes:
     name: Apply AST Transformations
     type: automatic
     steps:
-      - name: "Hoist nested React components"
+      - name: 'Hoist nested React components'
         js-ast-grep:
           js_file: scripts/codemod.ts
-          language: "tsx"
+          language: 'tsx'
           semantic_analysis: workspace
           include:
-            - "**/*.tsx"
-            - "**/*.jsx"
+            - '**/*.tsx'
+            - '**/*.jsx'
           exclude:
-            - "**/node_modules/**"
-            - "**/vendor/**"
-            - "**/*.test.*"
-            - "**/*.spec.*"
-            - "**/__pycache__/**"
-      - name: "Commit AST transformations"
+            - '**/node_modules/**'
+            - '**/vendor/**'
+            - '**/*.test.*'
+            - '**/*.spec.*'
+            - '**/__pycache__/**'
+      - name: 'Commit AST transformations'
         run: |
           git add -A
           [ -n "$(git status --porcelain)" ] && git commit -m "fix: hoist nested React components to module scope" || true
@@ -62,7 +62,7 @@ nodes:
     type: automatic
     depends_on: [apply-transforms]
     steps:
-      - name: "AI step for closure-dependent cases"
+      - name: 'AI step for closure-dependent cases'
         if: params.run_ai_step
         ai:
           prompt: |
@@ -76,7 +76,7 @@ nodes:
             3. Preserve behavior and formatting.
 
             Constraints: Add TODO if unsure; keep existing logic intact.
-      - name: "Commit AI fixes"
+      - name: 'Commit AI fixes'
         run: |
           git add -A
           [ -n "$(git status --porcelain)" ] && git commit -m "fix: AI-assisted resolution of closure-dependent nested components" || true
@@ -87,12 +87,12 @@ nodes:
     type: automatic
     depends_on: [ai-tricky-cases]
     steps:
-      - name: "Push branch to remote"
+      - name: 'Push branch to remote'
         run: |
           BRANCH=$(git branch --show-current)
           git push -u origin "$BRANCH"
         if: params.publish_pr
-      - name: "Create PR to main branch"
+      - name: 'Create PR to main branch'
         run: |
           BRANCH=$(git branch --show-current)
           BASE="${PARAM_MAIN_BRANCH:-main}"

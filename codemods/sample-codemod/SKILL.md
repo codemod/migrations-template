@@ -1,19 +1,19 @@
 ---
-schema_version: "1.0"
-name: "sample-codemod"
-version: "0.1.0"
-description: "Move React components defined inside other components to module scope to prevent state resets and re-render bugs"
-author: "Codemod Authors"
-license: "MIT"
-workflow: "workflow.yaml"
-category: "migration"
-repository: "https://github.com/codemod/migrations-template/tree/main/codemods/sample-codemod"
+schema_version: '1.0'
+name: 'sample-codemod'
+version: '0.1.0'
+description: 'Move React components defined inside other components to module scope to prevent state resets and re-render bugs'
+author: 'Codemod Authors'
+license: 'MIT'
+workflow: 'workflow.yaml'
+category: 'migration'
+repository: 'https://github.com/codemod/migrations-template/tree/main/codemods/sample-codemod'
 targets:
-  languages: ["typescript"]
-keywords: ["react", "upgrade", "standardization", "performance"]
+  languages: ['typescript']
+keywords: ['react', 'upgrade', 'standardization', 'performance']
 registry:
-  access: "public"
-  visibility: "public"
+  access: 'public'
+  visibility: 'public'
 ---
 
 # Operational Instructions for sample-codemod
@@ -34,8 +34,8 @@ Run nodes in this topological order. Steps inside each node run sequentially.
 
 1. Execute each node in topological order.
 2. **After each change-producing step:** Run validation before proceeding.
-   - `npm test` — jssg tests
-   - `npm run check-types` — typecheck (or equivalent)
+   - `pnpm test` — jssg tests
+   - `pnpm run check-types` — typecheck
    - `npx codemod workflow validate workflow.yaml` — workflow schema
 3. Review diffs. Proceed only when validation passes and changes look correct.
 4. If validation fails or diffs are wrong, fix and retry before continuing.
