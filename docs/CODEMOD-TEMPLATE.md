@@ -21,7 +21,6 @@ codemods/<slug>/
 ├── workflow.yaml
 ├── SKILL.md
 ├── package.json
-├── tsconfig.json
 ├── README.md
 └── scripts/
     └── codemod.ts
@@ -167,22 +166,19 @@ registry:
   "description": "[one-line description]",
   "type": "module",
   "scripts": {
-    "test": "codemod jssg test -l <target_lang> ./scripts/codemod.ts",
-    "check-types": "tsc --noEmit"
+    "test": "codemod jssg test -l <target_lang> ./scripts/codemod.ts"
   },
   "devDependencies": {
-    "@codemod.com/jssg-types": "catalog:",
-    "@types/node": "catalog:",
-    "typescript": "catalog:"
+    "@codemod.com/jssg-types": "catalog:"
   }
 }
 ```
 
 Use `-l <target_lang>` with ast-grep alias: `tsx`, `typescript`, `python`, `go`, `rust`, `java`, etc.
 
-## 5b. tsconfig.json
+## 5b. Typechecking (root tsconfig.json)
 
-Each codemod package should have its own `tsconfig.json`:
+Do **not** add a `tsconfig.json` per codemod package. The monorepo uses a single root `tsconfig.json` that typechecks all codemod scripts:
 
 ```json
 {
@@ -202,10 +198,12 @@ Each codemod package should have its own `tsconfig.json`:
     "noUncheckedIndexedAccess": true,
     "esModuleInterop": true
   },
-  "include": ["scripts/**/*.ts"],
-  "exclude": ["tests", "node_modules"]
+  "include": ["codemods/**/scripts/**/*.ts", "codemods/**/utils/**/*.ts"],
+  "exclude": ["**/node_modules", "**/tests", "**/tests-*"]
 }
 ```
+
+Run `pnpm run check-types` from the repository root after adding or changing a codemod script.
 
 ---
 

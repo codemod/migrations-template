@@ -4,12 +4,9 @@
   "description": "Move React components defined inside other components to module scope",
   "type": "module",
   "scripts": {
-    "check-types": "tsc --noEmit",
     "test": "codemod jssg test -l tsx ./scripts/codemod.ts"
   },
   "devDependencies": {
-    "@codemod.com/jssg-types": "catalog:",
-    "@types/node": "catalog:",
-    "typescript": "catalog:"
+    "@codemod.com/jssg-types": "catalog:"
   }
 }

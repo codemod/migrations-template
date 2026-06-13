@@ -15,6 +15,6 @@
     "noUncheckedIndexedAccess": true,
     "esModuleInterop": true
   },
-  "include": ["scripts/**/*.ts"],
-  "exclude": ["tests", "node_modules"]
+  "include": ["codemods/**/scripts/**/*.ts", "codemods/**/utils/**/*.ts"],
+  "exclude": ["**/node_modules", "**/tests", "**/tests-*"]
 }

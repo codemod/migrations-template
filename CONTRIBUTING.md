@@ -27,7 +27,7 @@ pnpm run lint:fix
 # Run all codemod package tests
 pnpm run test
 
-# Typecheck all codemod packages
+# Typecheck all codemod scripts (root tsconfig)
 pnpm run check-types
 
 # Same checks as CI (tests + typecheck)
@@ -41,15 +41,15 @@ Run one workspace package (the `pnpm --filter` value is the `name` field in that
 
 ```bash
 pnpm --filter <package-name> test
-pnpm --filter <package-name> check-types
 ```
 
 For example:
 
 ```bash
 pnpm --filter sample-codemod test
-pnpm --filter sample-codemod check-types
 ```
+
+Typechecking runs once from the repository root via `pnpm run check-types` (see root `tsconfig.json`).
 
 Use Node **22** locally (see [`.nvmrc`](./.nvmrc)) to match CI.
 
@@ -135,7 +135,6 @@ codemods/<slug>/
   codemod.yaml         # manifest
   workflow.yaml
   package.json
-  tsconfig.json
   README.md
   SKILL.md
 ```
@@ -157,8 +156,8 @@ npx codemod workflow run -w /path/to/my-codemod/workflow.yaml
 
 Each codemod package should include:
 
-- `package.json` with at least `test` and `check-types` scripts.
-- `codemod.yaml`, `workflow.yaml`, `tsconfig.json`, `README.md`, `SKILL.md`
+- `package.json` with at least a `test` script.
+- `codemod.yaml`, `workflow.yaml`, `README.md`, `SKILL.md`
 - `scripts/codemod.ts`
 - `tests/<case>/input.*` and `tests/<case>/expected.*`
 
@@ -166,16 +165,16 @@ Keep transformations atomic and verifiable with fixtures.
 
 ## Checks
 
-| Command                 | What it does                   |
-| ----------------------- | ------------------------------ |
-| `pnpm run format`       | Auto-format with oxfmt         |
-| `pnpm run format:check` | Check formatting (no writes)   |
-| `pnpm run lint`         | Lint with oxlint (type-aware)  |
-| `pnpm run lint:fix`     | Lint and auto-fix with oxlint  |
-| `pnpm run test`         | Run all codemod tests          |
-| `pnpm run check-types`  | Typecheck all codemod packages |
-| `pnpm run ci`           | Full check (test + typecheck)  |
-| `pnpm run docs:links`   | Verify Markdown links          |
+| Command                 | What it does                                         |
+| ----------------------- | ---------------------------------------------------- |
+| `pnpm run format`       | Auto-format with oxfmt                               |
+| `pnpm run format:check` | Check formatting (no writes)                         |
+| `pnpm run lint`         | Lint with oxlint (type-aware)                        |
+| `pnpm run lint:fix`     | Lint and auto-fix with oxlint                        |
+| `pnpm run test`         | Run all codemod tests                                |
+| `pnpm run check-types`  | Typecheck all codemod scripts (root `tsconfig.json`) |
+| `pnpm run ci`           | Full check (test + typecheck)                        |
+| `pnpm run docs:links`   | Verify Markdown links                                |
 
 ## Pull requests
 
