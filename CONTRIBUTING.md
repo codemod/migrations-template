@@ -33,7 +33,7 @@ pnpm run check-types
 # Same checks as CI (tests + typecheck)
 pnpm run ci
 
-# Verify URLs in tracked Markdown (also runs in CI)
+# Verify URLs in tracked Markdown
 pnpm run docs:links
 ```
 
@@ -57,14 +57,13 @@ Use Node **22** locally (see [`.nvmrc`](./.nvmrc)) to match CI.
 
 After `pnpm install`, Husky runs **lint-staged** before each commit: oxfmt and oxlint on staged files, plus targeted `pnpm test` when you touch `codemods/**/scripts/**/*.ts`. If something fails, fix or stage the updates and try again.
 
-The hook only inspects **staged** files. Files you did not touch can still fail a full-repo `pnpm run format:check` / `pnpm run lint` — CI focuses on **changed** paths for pull requests.
+The hook only inspects **staged** files. CI runs full-repo format, lint, and typecheck on every pull request, so unchanged files can still fail there even if the hook passed.
 
 ## CI
 
 Three workflows support quality and releases:
 
-- **`code-quality.yml` — Lint & types:** runs format, lint, and typecheck on every matching PR/push.
-- **`code-quality.yml` — Before/after tests:** cross-platform jssg tests on macOS, Ubuntu, and Windows; only affected codemod packages run on PRs.
+- **`ci.yaml` — Pull request checks:** runs on Ubuntu for PRs to `main`. Format, lint, and typecheck run across the full repo. Tests run only for codemod packages changed in the PR, or the full test suite when root tooling files change (for example `package.json`, `pnpm-lock.yaml`, or the workflow itself).
 - **`release.yml` + `publish.yml` — Release automation:** see _Release workflow_ below.
 
 Match the local checks (`pnpm run format`, `pnpm run lint`, `pnpm run ci`) before you push.
