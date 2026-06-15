@@ -14,11 +14,18 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for PR conventions, commit message format
 
 ## Build and Test
 
-- **Lint:** `npm run lint`
-- **Format:** `npm run format`
-- **Types:** `npm run typecheck`
-- **Per-codemod tests:** `cd codemods/<slug> && npm test` (runs jssg test)
+- **Format:** `pnpm run format` / `pnpm run format:check`
+- **Lint:** `pnpm run lint` / `pnpm run lint:fix`
+- **Types:** `pnpm run check-types`
+- **Tests:** `pnpm run test` (all packages) or `pnpm --filter <package-name> test`
+- **Full CI:** `pnpm run ci`
 - **Workflow validation:** `npx codemod workflow validate codemods/<slug>/workflow.yaml`
+
+## Failure modes that most often trip agents
+
+- **Forgetting `pnpm changeset`.** Pull requests that touch `codemods/` should include a changeset covering each changed package (or the `skip-changeset` label). CI warns but does not fail when changesets are missing. See _Adding a changeset_ in `CONTRIBUTING.md`.
+- **Editing `version` in `package.json` by hand.** Version bumps come from changesets when `pnpm run version-packages` runs. See _Release workflow_ in `CONTRIBUTING.md`.
+- **Skipping local checks.** Run `pnpm run format`, `pnpm run lint`, and `pnpm run ci` before you call the task done. See _Development setup_ and _CI_ in `CONTRIBUTING.md`.
 
 ## Creating New Codemods
 

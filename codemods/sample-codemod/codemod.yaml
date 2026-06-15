@@ -1,18 +1,18 @@
-schema_version: "1.0"
+schema_version: '1.0'
 
-name: "sample-codemod"
-version: "0.1.0"
-description: "Move React components defined inside other components to module scope to prevent state resets and re-render bugs"
-author: "Codemod Authors"
-license: "MIT"
-workflow: "workflow.yaml"
-category: "migration"
-repository: "https://github.com/codemod/migrations-template/tree/main/codemods/sample-codemod"
+name: 'sample-codemod'
+version: '0.1.0'
+description: 'Move React components defined inside other components to module scope to prevent state resets and re-render bugs'
+author: 'Codemod Authors'
+license: 'MIT'
+workflow: 'workflow.yaml'
+category: 'migration'
+repository: 'https://github.com/codemod/migrations-template/tree/main/codemods/sample-codemod'
 targets:
-  languages: ["typescript"]
+  languages: ['typescript']
 
-keywords: ["react", "upgrade", "standardization", "performance"]
+keywords: ['react', 'upgrade', 'standardization', 'performance']
 
 registry:
-  access: "public"
-  visibility: "public"
+  access: 'public'
+  visibility: 'public'

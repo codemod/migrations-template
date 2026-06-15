@@ -1,16 +1,21 @@
 {
-	"include": ["codemods/**/*.ts", "codemods/**/*.tsx", "codemods/**/*.js", "codemods/**/*.jsx"],
-	"exclude": ["**/tests/**/*"],
-	"compilerOptions": {
-		"target": "ES2020",
-		"module": "ESNext",
-		"moduleResolution": "Bundler",
-		"strict": true,
-		"noEmit": true,
-		"skipLibCheck": true,
-		"resolveJsonModule": true,
-		"esModuleInterop": true,
-		"forceConsistentCasingInFileNames": true,
-		"types": ["@codemod.com/jssg-types", "node"]
-	}
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["ESNext"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["@codemod.com/jssg-types", "node"],
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "esModuleInterop": true,
+    "erasableSyntaxOnly": true
+  },
+  "include": ["codemods/**/scripts/**/*.ts", "codemods/**/utils/**/*.ts"],
+  "exclude": ["**/node_modules", "**/tests", "**/tests-*"]
 }

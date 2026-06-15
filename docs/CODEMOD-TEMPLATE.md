@@ -35,19 +35,19 @@ Use `@jssg/utils` for common transformations such as import manipulations.
 ## 2. codemod.yaml
 
 ```yaml
-schema_version: "1.0"
+schema_version: '1.0'
 
-name: "my-awesome-codemod"
-version: "0.1.0"
-description: "Transform legacy patterns to modern syntax"
-author: "Your Name <you@example.com>"
-license: "MIT"
-workflow: "workflow.yaml"
-category: "migration"
-repository: "<URL to codemod source code, e.g. GitHub repo>"
+name: 'my-awesome-codemod'
+version: '0.1.0'
+description: 'Transform legacy patterns to modern syntax'
+author: 'Your Name <you@example.com>'
+license: 'MIT'
+workflow: 'workflow.yaml'
+category: 'migration'
+repository: '<URL to codemod source code, e.g. GitHub repo>'
 
 targets:
-  languages: ["typescript"]
+  languages: ['typescript']
 
 # Transformation type keywords/tags — pick one primary per codemod (avoid mixing breaking-change and feature-adoption):
 #   upgrade          - upgrade code to newer versions (encompasses breaking changes and feature adoption)
@@ -59,37 +59,38 @@ targets:
 #   a11y             - accessibility improvements and compliance
 #   standardization  - unify patterns, conventions, or APIs across a codebase
 #   code-mining      - detect-only: identify, flag, or extract patterns without transforming
-keywords: ["upgrade", "breaking-change", "react", "v17-to-v18"]
+keywords: ['upgrade', 'breaking-change', 'react', 'v17-to-v18']
 
 registry:
-  access: "public"
-  visibility: "public"
+  access: 'public'
+  visibility: 'public'
 ```
 
 ---
 
 ## 3. workflow.yaml
 
-> **IMPORTANT (agents):** New codemods MUST implement the full node structure below: `apply-transforms` (js-ast-grep and optional Commit steps), `ai-tricky-cases` (when the migration has tricky cases), and `publish`. Include the `params` block. Codemods run on the current branch. 
+> **IMPORTANT (agents):** New codemods MUST implement the full node structure below: `apply-transforms` (js-ast-grep and optional Commit steps), `ai-tricky-cases` (when the migration has tricky cases), and `publish`. Include the `params` block. Codemods run on the current branch.
 
 **Schema comment (first line):**
+
 ```yaml
 # yaml-language-server: $schema=https://raw.githubusercontent.com/codemod/codemod/refs/heads/main/schemas/workflow.json
 ```
 
 **Params schema** — each param must have `name`, `description`, `type`, and `default` where applicable:
 
-| Param | Type | Default | Notes |
-|-------|------|---------|-------|
-| commit_per_step | boolean | **false** | Commit after each change-producing step with a meaningful message |
-| run_ai_step | boolean | false | Run AI step for tricky cases — only add if AI step is needed |
-| publish_pr | boolean | false | Push branch and create PR (when true; agents must not push by default) |
-| main_branch | string | "main" | Target branch for PR |
-| api_token | string | — | secret: true, for GitHub API when gh CLI unavailable |
-| pr_title | string | — | Optional |
-| pr_body | string | — | Optional, multi_line: true |
+| Param           | Type    | Default   | Notes                                                                  |
+| --------------- | ------- | --------- | ---------------------------------------------------------------------- |
+| commit_per_step | boolean | **false** | Commit after each change-producing step with a meaningful message      |
+| run_ai_step     | boolean | false     | Run AI step for tricky cases — only add if AI step is needed           |
+| publish_pr      | boolean | false     | Push branch and create PR (when true; agents must not push by default) |
+| main_branch     | string  | "main"    | Target branch for PR                                                   |
+| api_token       | string  | —         | secret: true, for GitHub API when gh CLI unavailable                   |
+| pr_title        | string  | —         | Optional                                                               |
+| pr_body         | string  | —         | Optional, multi_line: true                                             |
 
-**Node structure:** Implement all three nodes below at minimum. Omit only the AI *step* (inside ai-tricky-cases) when all patterns can be handled by the AST codemod; keep the ai-tricky-cases node with `depends_on`. Include all steps (Commit, Push, Create PR) — they are gated by params. **Do not push to remote by default** — the Push step must use `if: params.publish_pr`. **Commit steps** use `if: params.commit_per_step` and must have task-specific, meaningful messages (e.g. `fix: migrate X to Y`, `fix: AI-assisted resolution of [case]`). If the migration can be divided into multiple shippable PRs, add a dedicated node for each part.
+**Node structure:** Implement all three nodes below at minimum. Omit only the AI _step_ (inside ai-tricky-cases) when all patterns can be handled by the AST codemod; keep the ai-tricky-cases node with `depends_on`. Include all steps (Commit, Push, Create PR) — they are gated by params. **Do not push to remote by default** — the Push step must use `if: params.publish_pr`. **Commit steps** use `if: params.commit_per_step` and must have task-specific, meaningful messages (e.g. `fix: migrate X to Y`, `fix: AI-assisted resolution of [case]`). If the migration can be divided into multiple shippable PRs, add a dedicated node for each part.
 
 ### 1. apply-transforms (type: automatic)
 
@@ -165,18 +166,44 @@ registry:
   "description": "[one-line description]",
   "type": "module",
   "scripts": {
-    "test": "npx codemod@latest jssg test -l <target_lang> ./scripts/codemod.ts",
-    "check-types": "tsc --noEmit"
+    "test": "codemod jssg test -l <target_lang> ./scripts/codemod.ts"
   },
   "devDependencies": {
-    "@codemod.com/jssg-types": "latest",
-    "@jssg/utils": "latest",
-    "typescript": "latest"
+    "@codemod.com/jssg-types": "catalog:"
   }
 }
 ```
 
 Use `-l <target_lang>` with ast-grep alias: `tsx`, `typescript`, `python`, `go`, `rust`, `java`, etc.
+
+## 5b. Typechecking (root tsconfig.json)
+
+Do **not** add a `tsconfig.json` per codemod package. The monorepo uses a single root `tsconfig.json` that typechecks all codemod scripts:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["ESNext"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["@codemod.com/jssg-types", "node"],
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "esModuleInterop": true
+  },
+  "include": ["codemods/**/scripts/**/*.ts", "codemods/**/utils/**/*.ts"],
+  "exclude": ["**/node_modules", "**/tests", "**/tests-*"]
+}
+```
+
+Run `pnpm run check-types` from the repository root after adding or changing a codemod script.
 
 ---
 
@@ -209,7 +236,7 @@ Create `SKILL.md` at the package root to make the codemod Agent Skill compatible
 
 - **Read the workflow graph:** Parse `workflow.yaml` nodes and `depends_on` to understand execution order (e.g. apply-transforms → ai-tricky-cases → publish).
 - **Minimal adaptation:** How to adjust `include`/`exclude` globs or `scripts/codemod.ts` logic based on user code patterns.
-- **Step-by-step execution:** Run steps in topological order (respect `depends_on`). After each step: validate outputs (`npm test`, `npm run check-types`, `npx codemod workflow validate workflow.yaml`), review diffs, then proceed.
+- **Step-by-step execution:** Run steps in topological order (respect `depends_on`). After each step: validate outputs (`pnpm test`, `pnpm run check-types`, `npx codemod workflow validate workflow.yaml`), review diffs, then proceed.
 - **AI steps:** Treat the AI step prompt as context for edge cases that AST transforms cannot handle. Apply AI steps only where indicated by the workflow (`run_ai_step=true`). Keep changes localized and reviewable.
 - **Explicit exclusions:** Do not include a high-level "description of changes" or migration overview. Focus on: understand, tweak, run, adapt.
 
