@@ -13,7 +13,8 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "erasableSyntaxOnly": true
   },
   "include": ["codemods/**/scripts/**/*.ts", "codemods/**/utils/**/*.ts"],
   "exclude": ["**/node_modules", "**/tests", "**/tests-*"]
