@@ -13,7 +13,7 @@ const yamlPaths = execSync("find codemods -path '*/node_modules/*' -prune -o -na
 })
   .trim()
   .split('\n')
-  .filter(Boolean)
+  .filter((path) => path !== '')
 
 for (const relativePath of yamlPaths) {
   const dir = join(root, dirname(relativePath))
